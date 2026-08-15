@@ -1,0 +1,588 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/generated/glass.css';
+@import 'fumadocs-ui/css/black.css';
+@import '@fumadocs/base-ui/css/preset.css';
+@import 'fumadocs-python/preset.css';
+@import '@xyflow/react/dist/style.css';
+
+/* Geist 1.7.2, served locally for the documentation. */
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/Geist-Variable.woff2') format('woff2');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 100 900;
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/GeistMono-Variable.woff2') format('woff2');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 100 900;
+}
+
+/* Cormorant, the display serif reserved for the landing hero headline. */
+@font-face {
+  font-family: 'Cormorant';
+  src: url('/fonts/Cormorant-Variable.woff2') format('woff2');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 300 700;
+}
+
+/* Tailwind's auto-detection starts at the CSS file's directory; the docs app
+ * lives one level up, so point it at the roots that hold class names. */
+@source '../app';
+@source '../mdx-components.tsx';
+@source '../components';
+
+@theme {
+  /* Tailwind's preflight reads these into `--default-font-family` and
+   * `--default-mono-font-family`, so the faces declared above apply to the
+   * whole documentation rather than to the landing hero alone. */
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  /* ─ Brand lime ────────────────────────────────────────────────────────
+   * One ramp feeds every accent in the project: the landing field, the
+   * documentation primary, rings, and selection. Hue is pinned at 121 across
+   * all eleven steps, so no two "brand greens" can drift apart again.
+   *
+   * Chroma is NOT monotonic, and that is the point: a yellow-green reaches
+   * its most saturated form at high lightness, so the loudest step is 400,
+   * not 600. Reading this ramp like a blue one produces muddy colour.
+   *
+   * Deliberately shadows Tailwind's stock `lime`, which nothing here uses.
+   */
+  --color-lime-50: oklch(98% 0.02 121);
+  --color-lime-100: oklch(96.5% 0.04 121);
+  --color-lime-200: oklch(94% 0.075 121);
+  --color-lime-300: oklch(92% 0.13 121);
+  --color-lime-400: oklch(90.5% 0.19 121);
+  --color-lime-500: oklch(80% 0.175 121);
+  --color-lime-600: oklch(69% 0.155 121);
+  --color-lime-700: oklch(58% 0.13 121);
+  --color-lime-800: oklch(48% 0.105 121);
+  --color-lime-900: oklch(36% 0.08 121);
+  --color-lime-950: oklch(26% 0.045 121);
+
+  /* The project's two neutrals. Tinted toward the same hue as the ramp, so a
+   * near-black surface never reads warm next to a lime one. Kept off the ramp
+   * because they are grounds, not accents. */
+  --color-ink: oklch(15% 0.012 121);
+  --color-paper: oklch(99% 0.008 121);
+
+  /* The dark-theme ground: a dark teal (#051f20) instead of the lime-tinted
+   * near-black above. Its own hue, kept off the ramp like the other two because
+   * it is a ground, not an accent. Every dark surface below derives from it, so
+   * a card cannot drift from the page it sits on. */
+  --color-abyss: oklch(18.5% 0.028 199);
+
+  --color-fd-background: oklch(100% 0 0);
+  --color-fd-foreground: var(--color-ink);
+  --color-fd-muted: oklch(96.5% 0.003 121);
+  --color-fd-muted-foreground: oklch(52% 0.008 121);
+  --color-fd-popover: oklch(99.3% 0.004 121);
+  --color-fd-popover-foreground: var(--color-ink);
+  /* Off-white, so a card (code block, diagram frame) reads as a raised
+   * surface instead of dissolving into an identically white page. */
+  --color-fd-card: oklch(99.4% 0.002 121);
+  --color-fd-card-foreground: var(--color-ink);
+  --color-fd-border: oklch(91% 0.005 121);
+  --color-fd-primary: var(--color-lime-800);
+  --color-fd-primary-foreground: var(--color-lime-50);
+  --color-fd-secondary: oklch(96.5% 0.003 121);
+  --color-fd-secondary-foreground: var(--color-ink);
+  --color-fd-accent: var(--color-fd-muted);
+  --color-fd-accent-foreground: var(--color-lime-900);
+  --color-fd-ring: var(--color-lime-600);
+}
+
+/* ─ Radius scale ────────────────────────────────────────────────────────
+ * Three values, and nothing between them: what sits inside a container, the
+ * container itself, and anything shaped like a pill. In px rather than rem
+ * on purpose — a corner is a physical constant of the surface and must not
+ * grow when the reader enlarges the type.
+ */
+:root {
+  --ap-radius-inner: 6px;
+  --ap-radius-panel: 12px;
+  --ap-radius-pill: 999px;
+
+  /* ─ Elevation ─
+   * Three heights, one light source (above), and a hue borrowed from the
+   * ground rather than pure black — a neutral-black shadow on a tinted page
+   * reads as dirt. Overridden wholesale in dark mode, where the same
+   * geometry needs far more opacity to register at all.
+   */
+  --ap-shadow-raised: 0 1px 2px oklch(15% 0.012 121 / 5%);
+  --ap-shadow-panel: 0 1px 2px oklch(15% 0.012 121 / 4%), 0 12px 32px -16px oklch(15% 0.012 121 / 22%);
+  --ap-shadow-float: 0 2px 4px oklch(15% 0.012 121 / 6%), 0 24px 56px -24px oklch(15% 0.012 121 / 30%);
+}
+
+/* Keep Coding Harness steps visually below their folder without changing the
+ * top-level documentation sections. */
+/* Selectors match the tail of the href: on GitHub Pages every link is prefixed
+ * with the project basePath (`/agentsparty`), so an absolute match never hits. */
+#nd-sidebar [data-state] > a[href*='/docs/tutorials/coding-harness/'] {
+  width: calc(100% - 0.75rem);
+  margin-inline-start: 0.75rem;
+}
+
+/* The dark ground is the same teal the landing field darkens to, so following
+ * a link out of the hero lands on the same material. */
+.dark {
+  --color-fd-background: var(--color-abyss);
+  --color-fd-foreground: oklch(93% 0.008 199);
+  --color-fd-muted: oklch(28% 0.03 199);
+  --color-fd-muted-foreground: oklch(70% 0.012 199);
+  --color-fd-popover: oklch(26% 0.03 199);
+  --color-fd-popover-foreground: oklch(90% 0.008 199);
+  --color-fd-card: oklch(24.5% 0.032 199);
+  --color-fd-card-foreground: oklch(97% 0.006 199);
+  --color-fd-border: oklch(32% 0.025 199);
+  --color-fd-primary: var(--color-lime-400);
+  --color-fd-primary-foreground: var(--color-ink);
+  --color-fd-secondary: oklch(28% 0.03 199);
+  --color-fd-secondary-foreground: oklch(93% 0.008 199);
+  --color-fd-accent: oklch(31% 0.045 199);
+  --color-fd-accent-foreground: oklch(94% 0.015 199);
+  --color-fd-ring: var(--color-lime-500);
+
+  --ap-shadow-raised: 0 1px 2px oklch(0% 0 0 / 40%);
+  --ap-shadow-panel: 0 1px 2px oklch(0% 0 0 / 35%), 0 12px 32px -16px oklch(0% 0 0 / 60%);
+  --ap-shadow-float: 0 2px 4px oklch(0% 0 0 / 40%), 0 24px 56px -24px oklch(0% 0 0 / 70%);
+}
+
+/* ─ Diagram series scale ─────────────────────────────────────────────────
+ * One categorical palette for every diagram. A legend that names six kinds of
+ * edge, or three roles, needs that many separable colours, which the two-tone
+ * documentation palette cannot supply — so these rotate hue in oklch at low
+ * chroma, staying a family next to the olive accent without collapsing into
+ * it. Defined globally because diagrams live in separate CSS modules that
+ * previously each invented their own hexes with no dark-mode counterpart.
+ */
+:root {
+  --diagram-green: oklch(52% 0.11 148);
+  --diagram-amber: oklch(54% 0.11 92);
+  --diagram-blue: oklch(52% 0.12 252);
+  --diagram-red: oklch(52% 0.13 32);
+  --diagram-cyan: oklch(52% 0.09 205);
+  --diagram-violet: oklch(52% 0.12 305);
+}
+
+/* Lifted for a near-black surface; only lightness and chroma move, so a
+ * category keeps its identity across themes. */
+.dark {
+  --diagram-green: oklch(82% 0.15 148);
+  --diagram-amber: oklch(84% 0.14 92);
+  --diagram-blue: oklch(78% 0.12 252);
+  --diagram-red: oklch(75% 0.14 32);
+  --diagram-cyan: oklch(82% 0.10 205);
+  --diagram-violet: oklch(78% 0.12 305);
+}
+
+/* Give monospace code a little more room to breathe. Absolute rather than
+ * relative: `1.05em` compounded once per nesting level, so a mono span inside
+ * a mono block grew without anyone asking. Geist Mono is already wide, so a
+ * full tracking step makes listings feel loose; a near-zero step keeps glyphs
+ * from touching without adding width. */
+:where(pre, .font-mono) {
+  font-size: 0.875rem;
+  letter-spacing: 0.005em;
+  line-height: 1.6;
+}
+
+/* Measure. Prose narrows to a comfortable line; code blocks, diagrams, and
+ * tables keep the full column, so a listing is never reflowed to fit text. */
+.prose > p,
+.prose > ul,
+.prose > ol,
+.prose > blockquote {
+  max-width: 68ch;
+}
+
+/* Break the last line of a paragraph before it strands a single word. */
+.prose > p {
+  text-wrap: pretty;
+}
+
+/* Headings break before they strand a word; a heading's last line is the most
+ * visible one, so it balances. */
+.prose h2,
+.prose h3 {
+  text-wrap: balance;
+}
+
+/* The page title and description. The title carries the ink at a display size;
+ * the description narrows so it reads as a subtitle, not a first paragraph. */
+.ap-docs-title {
+  font-size: clamp(2.125rem, 3.4vw, 2.75rem);
+  line-height: 1.12;
+  letter-spacing: -0.022em;
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+.ap-docs-description {
+  max-width: 58ch;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+/* Inline code is a label, not a panel: no border, a whisper of background.
+ * The surrounding word already carries the emphasis. */
+.prose code:not(pre code) {
+  padding: 0.08em 0.3em;
+  border: 0;
+  border-radius: var(--ap-radius-inner);
+  background: var(--color-fd-muted);
+  color: inherit;
+  font-size: 0.9em;
+}
+
+/* ─ Hero ─────────────────────────────────────────────────────────────────
+ * The hero pins its own palette rather than reading the fd-* tokens, because
+ * it is dark in either theme. The values are the same brand ramp the
+ * documentation uses, so the two are one material seen under two lights.
+ */
+.agentsparty-hero {
+  --agentsparty-hero-bg: var(--color-abyss);
+  --agentsparty-hero-ink: oklch(97% 0.006 121);
+  --agentsparty-hero-accent: var(--color-lime-400);
+  --agentsparty-hero-accent-strong: var(--color-lime-300);
+
+  /* Glass: one recipe shared by the badge, the install rail, and all three
+   * buttons. Mixed from the hero's own ink so a tint change propagates. */
+  --agentsparty-glass-bg: color-mix(in oklab, var(--agentsparty-hero-ink) 10%, transparent);
+  --agentsparty-glass-bg-hover: color-mix(in oklab, var(--agentsparty-hero-ink) 18%, transparent);
+  --agentsparty-glass-line: color-mix(in oklab, var(--agentsparty-hero-ink) 28%, transparent);
+  --agentsparty-glass-line-hover: color-mix(in oklab, var(--agentsparty-hero-ink) 55%, transparent);
+  --agentsparty-glass-shadow: 0 10px 30px oklch(0% 0 0 / 0.35), inset 0 1px 0 oklch(100% 0 0 / 0.22);
+
+  position: relative;
+  width: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: var(--agentsparty-hero-bg);
+  color: var(--agentsparty-hero-ink);
+  font-family: Geist, system-ui, sans-serif;
+}
+
+.agentsparty-hero ::selection {
+  background: var(--agentsparty-hero-accent);
+  color: var(--agentsparty-hero-bg);
+}
+
+.agentsparty-hero-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.agentsparty-hero-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    72% 58% at 50% 50%,
+    color-mix(in oklab, var(--color-abyss) 78%, transparent),
+    color-mix(in oklab, var(--color-abyss) 34%, transparent) 68%,
+    transparent 100%
+  );
+}
+
+.agentsparty-hero-content {
+  position: relative;
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  padding: 80px 32px;
+  text-align: center;
+}
+
+.agentsparty-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 16px 0 5px;
+  border: 1px solid var(--agentsparty-glass-line);
+  border-radius: var(--ap-radius-pill);
+  background: var(--agentsparty-glass-bg);
+  backdrop-filter: blur(14px) saturate(1.3);
+  box-shadow: var(--agentsparty-glass-shadow);
+}
+
+.agentsparty-hero-badge span:first-child {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: var(--ap-radius-pill);
+  background: var(--agentsparty-hero-ink);
+  color: var(--agentsparty-hero-bg);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.agentsparty-hero-badge span:last-child {
+  color: color-mix(in oklab, var(--agentsparty-hero-ink) 70%, transparent);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* The one display serif, sized up from the surrounding sans so its thinner
+ * strokes hold the same ink weight on screen. */
+.agentsparty-hero h1 {
+  max-width: 16ch;
+  margin: 0;
+  font-family: 'Cormorant', ui-serif, Georgia, 'Times New Roman', serif;
+  font-size: clamp(40px, 6.4vw, 92px);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.agentsparty-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.agentsparty-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 20px;
+  border: 1px solid var(--agentsparty-glass-line);
+  border-radius: var(--ap-radius-pill);
+  background: var(--agentsparty-glass-bg);
+  backdrop-filter: blur(14px) saturate(1.3);
+  box-shadow: var(--agentsparty-glass-shadow);
+  color: var(--agentsparty-hero-ink);
+  font-size: 14px;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+
+.agentsparty-pill:hover {
+  border-color: var(--agentsparty-glass-line-hover);
+  background: var(--agentsparty-glass-bg-hover);
+}
+
+.agentsparty-pill-accent {
+  border-color: color-mix(in oklab, var(--agentsparty-hero-accent) 60%, transparent);
+  background: color-mix(in oklab, var(--agentsparty-hero-accent) 82%, transparent);
+  box-shadow:
+    0 10px 30px color-mix(in oklab, var(--agentsparty-hero-accent) 22%, transparent),
+    inset 0 1px 0 oklch(100% 0 0 / 0.35);
+  color: var(--agentsparty-hero-bg);
+}
+
+.agentsparty-pill-accent:hover {
+  border-color: color-mix(in oklab, var(--agentsparty-hero-accent) 60%, transparent);
+  background: color-mix(in oklab, var(--agentsparty-hero-accent-strong) 92%, transparent);
+}
+
+.agentsparty-pill-icon {
+  width: 40px;
+  padding: 0;
+  justify-content: center;
+}
+
+.agentsparty-pill-icon svg {
+  display: block;
+}
+
+/* The two install commands, side by side on one rail. Each is a button that
+ * copies itself, so the rail clips its own corners: a hover fill has to stop
+ * at the pill rather than at the rectangle behind it. */
+.agentsparty-hero-install {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--agentsparty-glass-line);
+  border-radius: var(--ap-radius-pill);
+  background: var(--agentsparty-glass-bg);
+  backdrop-filter: blur(14px) saturate(1.3);
+  box-shadow: var(--agentsparty-glass-shadow);
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.agentsparty-hero-install-command {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border: 0;
+  background: none;
+  color: color-mix(in oklab, var(--agentsparty-hero-ink) 68%, transparent);
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.agentsparty-hero-install-command:hover {
+  background: var(--agentsparty-glass-bg-hover);
+  color: var(--agentsparty-hero-ink);
+}
+
+/* Pushed in rather than down: the rail is one object, so a pressed command
+ * should darken in place instead of detaching from its neighbour. */
+.agentsparty-hero-install-command:active {
+  background: color-mix(in oklab, var(--agentsparty-hero-ink) 26%, transparent);
+}
+
+.agentsparty-hero-install-command:focus-visible {
+  outline: 2px solid var(--agentsparty-hero-accent);
+  outline-offset: -3px;
+}
+
+/* The one part of the two lines that differs, and so the only part worth
+ * scanning: the reader picks a row by its first word. */
+.agentsparty-hero-install-tool {
+  color: var(--agentsparty-hero-ink);
+  font-weight: 550;
+}
+
+.agentsparty-hero-install-command svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.55;
+}
+
+.agentsparty-hero-install-command:hover svg {
+  opacity: 1;
+}
+
+/* The hairline between the two commands, and on narrow screens the seam they
+ * stack across. Drawn on the second command so no divider trails the last. */
+.agentsparty-hero-install-command + .agentsparty-hero-install-command {
+  border-inline-start: 1px solid var(--agentsparty-glass-line);
+}
+
+@media (max-width: 34rem) {
+  .agentsparty-hero-content {
+    gap: 28px;
+    padding: 64px 20px;
+  }
+
+  .agentsparty-hero-install {
+    flex-direction: column;
+    border-radius: var(--ap-radius-panel);
+  }
+
+  /* Command left, copy affordance right, so the two rows align on both edges
+   * once they stack. */
+  .agentsparty-hero-install-command {
+    justify-content: space-between;
+  }
+
+  .agentsparty-hero-install-command + .agentsparty-hero-install-command {
+    border-inline-start: none;
+    border-block-start: 1px solid var(--agentsparty-glass-line);
+  }
+}
+
+.agentsparty-mermaid svg {
+  display: block;
+  margin-inline: auto;
+  color: var(--color-fd-foreground);
+}
+
+.agentsparty-mermaid svg rect {
+  fill: color-mix(in oklab, var(--color-fd-primary) 9%, var(--color-fd-card, #fff));
+  stroke: var(--color-fd-primary);
+}
+
+.agentsparty-mermaid svg line {
+  stroke: color-mix(in oklab, var(--color-fd-primary) 72%, var(--color-fd-foreground));
+}
+
+.agentsparty-mermaid svg marker polygon {
+  fill: var(--color-fd-primary);
+}
+
+.agentsparty-panel {
+  box-shadow: var(--ap-shadow-panel);
+}
+
+/* Code cards are hairline-only: the panel sits on the page, it does not float.
+ * Floating surfaces (diagrams, popovers) take --ap-shadow-panel instead. The
+ * radius is pinned to the panel token so a code block cannot drift from the
+ * surface scale. */
+.shiki {
+  box-shadow: none;
+  border-radius: var(--ap-radius-panel);
+}
+
+/* A terminal block is output or an interactive prompt, not code: flat and
+ * muted, so it reads as a result rather than as another block to type from. */
+.ap-terminal {
+  margin: 1.25rem 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-fd-border);
+  border-radius: var(--ap-radius-panel);
+  background: var(--color-fd-secondary);
+  color: var(--color-fd-muted-foreground);
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* Shiki paints its own theme background; the panel supplies one instead. */
+.agentsparty-code pre {
+  background-color: transparent !important;
+}
+
+/* Let documentation code blocks grow to their full height instead of
+ * scrolling vertically; a long listing is read top to bottom.
+ * Deliberately NOT wrapped: `overflow-wrap: anywhere` used to break
+ * identifiers like `ProjectionError` and `msg[A, B]` at arbitrary points, so
+ * an over-wide line scrolls horizontally inside its own block instead. */
+.shiki > [role='region'] {
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+/* Keep the Python API tree visually nested under its subsection. */
+#nd-sidebar [data-state='open']:has(> div > div > div > a[href$='/docs/agentsparty/']) [data-state='open'][id],
+#nd-sidebar-mobile [data-state='open']:has(> div > div > div > a[href$='/docs/agentsparty/']) [data-state='open'][id] {
+  padding-inline-start: 0.5rem;
+}
+
+/* Separate the scrolling tree from the sidebar header. Matched by role rather
+ * than by fumadocs' internal utility classes, which change between releases. */
+#nd-sidebar > div:has(> [data-radix-scroll-area-viewport]) {
+  margin-top: 1rem;
+}
+
+/* The section index link ("Documentation") sits above the tree. */
+#nd-sidebar [data-radix-scroll-area-viewport] a[href$='/docs/'],
+#nd-sidebar-mobile [data-radix-scroll-area-viewport] a[href$='/docs/'] {
+  margin-top: 0.25rem;
+  width: 100%;
+}

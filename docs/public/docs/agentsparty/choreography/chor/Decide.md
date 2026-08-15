@@ -1,0 +1,35 @@
+# Decide (/docs/agentsparty/choreography/chor/Decide)
+
+Context manager for ``with c.decide(sender, receiver) as verdict``.
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, chor, sender, receiver) -> None"}>
+
+Prepare a alt recorder for two roles.
+
+<PySourceCode >
+
+```python
+def __init__(self, chor: Chor, sender: Role, receiver: Role) -> None:
+    """Prepare a alt recorder for two roles."""
+    self._chor = chor
+    self._sender = sender
+    self._receiver = receiver
+    self._cases: list[Case[SessionType]] = []
+    self._verdict = Verdict(self)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"chor"} type={"Chor"} value={null} />
+<PyParameter name={"sender"} type={"Role"} value={null} />
+<PyParameter name={"receiver"} type={"Role"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

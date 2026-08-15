@@ -1,0 +1,50 @@
+---
+title: Parallel
+---
+
+Context manager for ``with c.parallel() as split``.
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, chor) -> None"}>
+
+Prepare an empty collection of parallel branches.
+
+<PySourceCode >
+
+```python
+def __init__(self, chor: Chor) -> None:
+    """Prepare an empty collection of parallel branches."""
+    self._chor = chor
+    self._branches: list[Fragment[SessionType]] = []
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"chor"} type={"Chor"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"branch"} type={"(self) -> BranchBody"}>
+
+Open one branch body.
+
+<PySourceCode >
+
+```python
+def branch(self) -> BranchBody:
+    """Open one branch body."""
+    return BranchBody(self)
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"agentsparty.choreography.chor.BranchBody"} />
+
+</PyFunction>

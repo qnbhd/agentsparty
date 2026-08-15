@@ -1,0 +1,89 @@
+# Control and content (/docs/concepts/control-and-content)
+
+The protocol and the participants each own one half of a session, and the
+runtime holds both to their half.
+
+- **Control**: who talks to whom, in which order, and which labels exist; the
+  protocol declares all of it.
+- **Content**: which declared label a chooser picks, plus the payload bytes
+  that pass the codec; participant implementations supply that.
+
+The participant and the runtime both refuse an undeclared label.
+
+## Typed payloads
+
+A label names the operation; a codec names the value. Decode runs at the
+message boundary, so handlers receive a value that already satisfies the
+predicate.
+
+```python exec
+from agentsparty.kernel.errors import PayloadError
+from agentsparty.protocol import Integer, record
+
+Positive = Integer.where('positive', lambda n: n > 0)
+print(Positive.decode(3))
+try:
+    Positive.decode(-1)
+except PayloadError as err:
+    print(type(err).__name__)
+
+Draft = record('Draft', title=str, words=int)
+print(Draft.decode({'title': 'v1', 'words': 12}))
+```
+
+A refined codec rejects values that fail its predicate during decode.
+Downstream code works with an integer that already satisfies the invariant.
+
+```python exec
+from agentsparty.protocol import Integer, msg, render
+from agentsparty.kernel.role import roles
+
+A, B = roles('A', 'B')
+Positive = Integer.where('positive', lambda n: n > 0)
+protocol = msg[A, B]('Count', Positive).close()
+print(render(protocol))
+```
+
+`render` prints the declared codec. An OpenAI-backed sender is asked for a
+value that already has to pass the same decode:
+
+```python compile
+from openai import AsyncOpenAI
+from agentsparty.agent import agent
+from agentsparty.human import human, script
+from agentsparty import OpenAIModel
+from agentsparty.protocol import Integer, msg, render
+from agentsparty.kernel.role import roles
+from agentsparty.runtime import Cast
+
+Counter, Display = roles('Counter', 'Display')
+Positive = Integer.where('positive', lambda number: number > 0)
+protocol = msg[Counter, Display](Positive('Count'))
+print(render(protocol))
+model = OpenAIModel('gpt-5.6-luna', AsyncOpenAI(max_retries=0, timeout=30.0))
+trace = (
+    Cast(protocol)
+    .play(Counter, agent(model, 'send a positive count'))
+    .play(Display, human(script()))
+    .run_sync()
+)
+assert trace[0].payload == 3
+print(trace[0].payload)
+```
+
+## The vocabulary
+
+| Codec | What it gives you |
+| --- | --- |
+| `Text`, `Integer`, `Flag` | Primitives |
+| `list_of`, `dict_of`, `optional`, `one_of` | Containers |
+| `record` | A named field map |
+| `Integer.where('positive', predicate)` | A runtime predicate on decode |
+| `json_model` | When a schema and a parser already exist |
+
+The complete typed-payload program is
+`docs/examples/tutorial/02_typed_payloads.py`.
+
+Related: [Participants and roles](/docs/concepts/participants-and-roles),
+[[agentsparty.agent.agent]].
+

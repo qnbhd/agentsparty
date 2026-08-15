@@ -1,0 +1,161 @@
+---
+title: Quickstart
+icon: Rocket
+description: Define and run a review loop session with OpenAI models.
+aliases:
+  - first run
+  - pypi quickstart
+journey: start
+status: stable
+---
+
+A review loop, running end to end: the **Writer** produces a draft, and the **Reviewer** either approves it or sends back feedback that starts another round. The protocol below decides which of those two may happen, and when.
+
+## Installation
+
+Install `agentsparty` with the optional OpenAI backend:
+
+<Tabs items={["uv", "pip"]}>
+
+<Tab value={"uv"}>
+
+```bash
+uv add "agentsparty[openai]"
+export OPENAI_API_KEY="sk-..."
+```
+
+</Tab>
+
+<Tab value={"pip"}>
+
+```bash
+pip install "agentsparty[openai]"
+export OPENAI_API_KEY="sk-..."
+```
+
+</Tab>
+
+</Tabs>
+
+## The whole program
+
+Save this as `main.py`. It declares the typed protocol, binds `gpt-5.6-luna` agents to both roles, and runs the session to completion.
+
+```python compile
+import asyncio
+import os
+
+from openai import AsyncOpenAI
+import agentsparty as ap
+from agentsparty.protocol import alt, msg, rec, render, var
+
+# 1. Define roles and typed messages
+Writer, Reviewer = ap.roles('Writer', 'Reviewer')
+
+Draft = ap.Text('Draft', 'The article draft content.')
+Feedback = ap.Text('Feedback', 'Specific critique to improve the draft.')
+Approve = ap.Nothing('Approve', 'Accept the draft as ready.')
+
+# 2. Declare the conversation protocol before execution
+protocol = (
+    rec(
+        'review_loop',
+        msg[Writer, Reviewer](Draft)
+        >> alt[Reviewer, Writer](
+            Approve,
+            Feedback >> var('review_loop'),
+        ),
+    )
+).close()
+
+print('=== Session Protocol ===')
+print(render(protocol))
+
+
+async def main() -> None:
+    # 3. Bind OpenAI model to agents with specific briefs
+    client = AsyncOpenAI(
+        api_key=os.environ['OPENAI_API_KEY'],
+        max_retries=0,
+        timeout=30.0,
+    )
+    model = ap.OpenAIModel('gpt-5.6-luna', client)
+
+    writer = ap.Agent(
+        model,
+        Writer,
+        'Write a concise technical tip about Python typing. If you receive feedback, refine the draft.',
+        protocol,
+    )
+    reviewer = ap.Agent(
+        model,
+        Reviewer,
+        'Review the draft. If it is accurate and concise, choose Approve. If it needs improvement, choose Feedback.',
+        protocol,
+    )
+
+    # 4. Run the verified session runtime
+    runtime = ap.AgentRuntime(protocol, [writer, reviewer])
+    trace = await runtime.run()
+
+    print('\n=== Execution Trace ===')
+    for envelope in trace:
+        print(
+            f'{envelope.sender.name} -> {envelope.receiver.name}: '
+            f'{envelope.label.name}({envelope.payload!r})'
+        )
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
+```
+
+## What the pieces do
+
+`protocol` fixes every allowed path, payload type, and terminal branch before anything runs, so `AgentRuntime` refuses an illegal interaction without spending a model call. Projection then hands each role its own view of that value; an agent can act only when its endpoint says it may, and only with the payload declared there. Every completed step lands in the trace as a typed `Envelope` carrying sender, receiver, label, and decoded payload.
+
+### Expected output
+
+Run `python main.py` and `render(protocol)` prints the conversation structure first, then the live trace follows:
+
+```text
+=== Session Protocol ===
+rec review_loop
+  Writer -> Reviewer : Draft(str)
+  Reviewer -> Writer {
+    Approve():
+      end
+    Feedback(str):
+      review_loop
+  }
+
+=== Execution Trace ===
+Writer -> Reviewer: Draft('Use TypeVar or PEP 695 type parameters for generic functions in Python.')
+Reviewer -> Writer: Feedback('Add a brief 1-line code example.')
+Writer -> Reviewer: Draft('def first[T](items: list[T]) -> T: return items[0]')
+Reviewer -> Writer: Approve(None)
+```
+
+## Next
+
+<Cards>
+
+<Card
+  href={"/docs/concepts/protocol-first"}
+  title={"Core Concepts"}
+  description={"Understand session types, combinators, projection, and runtime invariants."}
+/>
+
+<Card
+  href={"/docs/concepts/participants-and-roles"}
+  title={"Participants & Roles"}
+  description={"Connect humans, deterministic state machines, and tools to the same protocol."}
+/>
+
+<Card
+  href={"/docs/tutorials/coding-harness/start"}
+  title={"Build a Coding Agent"}
+  description={"Step-by-step tutorial building a verified multi-agent coding harness from scratch."}
+/>
+
+</Cards>

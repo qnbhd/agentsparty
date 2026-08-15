@@ -1,0 +1,33 @@
+---
+title: Routine
+---
+
+A choreography written against formal roles, reusable under any binding.
+
+A routine declares its whole interface: every role its body mentions is a
+parameter, and its recursion is closed. Nothing leaks into the protocol
+that calls it except the roles the caller itself names.
+
+## Attributes
+
+<PyAttribute name={"name"} type={"str"} value={null} />
+
+<PyAttribute name={"params"} type={"_RoutineParams"} value={null} />
+
+<PyAttribute name={"body"} type={"SessionFragment"} value={null} />
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, name, params, body) -> None"}>
+
+<div >
+
+<PyParameter name={"name"} type={"str"} value={null} />
+<PyParameter name={"params"} type={"_RoutineParams"} value={null} />
+<PyParameter name={"body"} type={"SessionFragment"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

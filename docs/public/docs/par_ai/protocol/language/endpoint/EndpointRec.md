@@ -1,0 +1,24 @@
+# EndpointRec (/docs/agentsparty/protocol/language/endpoint/EndpointRec)
+
+A recursive endpoint type ``μ name.body``.
+
+## Attributes
+
+<PyAttribute name={"name"} type={"str"} value={null} />
+
+<PyAttribute name={"body"} type={"EndpointType"} value={null} />
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, name, body) -> None"}>
+
+<div >
+
+<PyParameter name={"name"} type={"str"} value={null} />
+<PyParameter name={"body"} type={"EndpointType"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

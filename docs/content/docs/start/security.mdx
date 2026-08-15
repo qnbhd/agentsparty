@@ -1,0 +1,92 @@
+---
+title: Security
+icon: Shield
+description: Injection, sandboxing, path checks, timeouts, budgets, and plaintext logs.
+aliases:
+  - security
+  - prompt injection
+  - sandbox
+  - timeout
+journey: start
+status: stable
+---
+
+<Callout type="warn">
+`agentsparty` checks protocol shape. It does not sandbox your process, hide
+model output, or add a timeout to an injected HTTP client. The application
+owns those boundaries.
+</Callout>
+
+## Prompt injection
+
+Codecs check payload *shape*, not intent. Untrusted text (user input, web
+search hits, retrieved documents) is still data. Keep it out of the
+instruction channel.
+
+The content-pipeline example labels live search results as untrusted data,
+caps each body and the result count, and tells the Researcher not to treat
+titles, hrefs, or bodies as commands. Copy that split: instructions in the
+brief, external text in a typed payload.
+
+## Sandboxing and least privilege
+
+A `Toolbox` handler runs in the host process with that process's privileges.
+Give a role only the tools its endpoint can name. Do not expose a general
+shell or file writer because a model asked for one.
+
+Run user-written tools under the same least-privilege rules you would use
+without an LLM: a dedicated user, a container, or no network.
+
+## Path and command validation
+
+Validate a path or command *before* the effect. Coding-agent examples refuse
+absolute paths and `..` segments, then resolve under a fixed workspace root.
+The landing-page example writes only codec-validated `Hero` and `Features`
+names below that root.
+
+<Callout type="warn">
+A comment that says "stay in the workspace" is not a check.
+</Callout>
+
+## Transport timeout
+
+Construct `AsyncOpenAI` with a finite `timeout`. `OpenAIModel` does not add
+one; the client is injected.
+
+```python compile
+from openai import AsyncOpenAI
+from agentsparty import OpenAIModel
+
+client = AsyncOpenAI(max_retries=0, timeout=30.0)
+model = OpenAIModel('gpt-5.6-luna', client)
+print(type(model).__name__)
+```
+
+`max_retries=0` keeps retry policy in [[agentsparty.llm.compose.Retrying]], where
+the session can see it. See [models](/docs/concepts/models).
+
+## Deadline, Allowance, Metered
+
+| Bound | What it stops |
+| --- | --- |
+| [[agentsparty.protocol.language.core.Deadline]] | A branch window that stays open too long |
+| [[agentsparty.kernel.budget.Allowance]] | Protocol steps and recursive unfoldings |
+| [[agentsparty.llm.compose.Metered]] | Further model calls once token receipts pass a cap |
+
+<Callout type="warn">
+None of these replace a transport timeout or a sandbox.
+</Callout>
+
+## Plaintext journals and tracers
+
+[[agentsparty.journal.jsonl.JsonlJournal]], [[agentsparty.journal.sqlite.SqliteJournal]],
+and the tracers persist payloads and model output as written. Treat those
+files as sensitive: they hold prompts, tool results, and completions.
+
+See [journal and trace](/docs/concepts/journal-and-trace) and
+[SECURITY.md](https://github.com/qnbhd/agentsparty/blob/master/SECURITY.md) for
+private reporting.
+
+<Callout type="error">
+Do not file vulnerabilities as public issues.
+</Callout>

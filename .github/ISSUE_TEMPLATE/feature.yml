@@ -1,0 +1,33 @@
+name: Feature
+description: A capability the current API cannot express
+title: '[feature] '
+labels: [enhancement]
+body:
+  - type: textarea
+    id: task
+    attributes:
+      label: Task
+      description: What problem should the library help solve? Describe the task, not only a solution.
+    validations:
+      required: true
+  - type: textarea
+    id: insufficient
+    attributes:
+      label: Why the current API is insufficient
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Proposed acceptance criteria
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: markdown
+    attributes:
+      value: |
+        Contributions must implement only the capability requested — no drive-by
+        features or abstractions.

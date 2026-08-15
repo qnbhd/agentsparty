@@ -1,0 +1,95 @@
+# errors (/docs/agentsparty/kernel/errors/index)
+
+The protocol exception hierarchy.
+
+<Tabs items={["Class","Functions"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"ProjectionError"} href={"/docs/agentsparty/kernel/errors/ProjectionError"} />
+<Card title={"ConformanceError"} href={"/docs/agentsparty/kernel/errors/ConformanceError"} />
+<Card title={"CompositionError"} href={"/docs/agentsparty/kernel/errors/CompositionError"} />
+<Card title={"PayloadError"} href={"/docs/agentsparty/kernel/errors/PayloadError"} />
+<Card title={"SelectionError"} href={"/docs/agentsparty/kernel/errors/SelectionError"} />
+<Card title={"AllowanceExceededError"} href={"/docs/agentsparty/kernel/errors/AllowanceExceededError"} />
+<Card title={"RecursionLimitError"} href={"/docs/agentsparty/kernel/errors/RecursionLimitError"} />
+<Card title={"StepLimitError"} href={"/docs/agentsparty/kernel/errors/StepLimitError"} />
+<Card title={"DeadlineExceededError"} href={"/docs/agentsparty/kernel/errors/DeadlineExceededError"} />
+<Card title={"TokenLimitError"} href={"/docs/agentsparty/kernel/errors/TokenLimitError"} />
+<Card title={"ModelError"} href={"/docs/agentsparty/kernel/errors/ModelError"} />
+<Card title={"ModelUnavailableError"} href={"/docs/agentsparty/kernel/errors/ModelUnavailableError"} />
+<Card title={"ModelRefusedError"} href={"/docs/agentsparty/kernel/errors/ModelRefusedError"} />
+<Card title={"JournalError"} href={"/docs/agentsparty/kernel/errors/JournalError"} />
+
+</Cards>
+
+</Tab>
+<Tab value={"Functions"}>
+
+<PyFunction name={"fault"} type={"(error) -> str"}>
+
+How an exception is written down when it is observed, not raised.
+
+One spelling, because a trace is read by people: the exception's type name,
+then what it said. The session scope writes failures with it
+([`Failed`](/docs/agentsparty/tracing/signals/Failed)) and so does a cancellation
+notice, so one failure reads the same way wherever it is recorded.
+
+<Callout title={"Example"} type={"example"}>
+
+>>> from agentsparty.kernel.errors import PayloadError, fault
+>>> fault(PayloadError('not json'))
+'PayloadError: not json'
+
+</Callout>
+
+<PySourceCode >
+
+```python
+def fault(error: Exception) -> str:
+    """How an exception is written down when it is observed, not raised.
+
+    One spelling, because a trace is read by people: the exception's type name,
+    then what it said. The session scope writes failures with it
+    (:class:`~agentsparty.tracing.signals.Failed`) and so does a cancellation
+    notice, so one failure reads the same way wherever it is recorded.
+
+    Args:
+        error: The exception to write down.
+
+    Returns:
+        The exception's type name and its message, separated by a colon.
+
+    Example:
+        >>> from agentsparty.kernel.errors import PayloadError, fault
+        >>> fault(PayloadError('not json'))
+        'PayloadError: not json'
+    """
+    return f'{type(error).__name__}: {error}'
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"error"} type={"Exception"} value={undefined}>
+
+The exception to write down.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"str"}>
+
+The exception's type name and its message, separated by a colon.
+
+</PyFunctionReturn>
+
+</PyFunction>
+
+</Tab>
+
+</Tabs>

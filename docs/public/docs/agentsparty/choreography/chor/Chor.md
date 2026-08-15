@@ -1,0 +1,272 @@
+# Chor (/docs/agentsparty/choreography/chor/Chor)
+
+Recording surface used inside a `choreography` body.
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self) -> None"}>
+
+Start with one root recording scope.
+
+<PySourceCode >
+
+```python
+def __init__(self) -> None:
+    """Start with one root recording scope."""
+    self._stack: list[_Scope] = [_Scope()]
+    self._loop_serial: int = 0
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"say"} type={"(self, sender, receiver, message) -> Located[Any]"}>
+
+Record an internal message from *sender* to *receiver*.
+
+<PySourceCode >
+
+```python
+def say(
+    self,
+    sender: Role,
+    receiver: Role,
+    message: str | Label | Case[Any],
+) -> Located[Any]:
+    """Record an internal message from *sender* to *receiver*.
+
+    Args:
+        sender: The role sending the message.
+        receiver: The role receiving the message.
+        message: A label or a declared :class:`~agentsparty.protocol.language.core.Case`.
+
+    Returns:
+        An opaque :class:`Located` at *receiver* (no consumption in v1).
+    """
+    self._append(msg[sender, receiver](message))
+    return Located(_receiver=receiver)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"sender"} type={"Role"} value={undefined}>
+
+The role sending the message.
+
+</PyParameter>
+<PyParameter name={"receiver"} type={"Role"} value={undefined}>
+
+The role receiving the message.
+
+</PyParameter>
+<PyParameter name={"message"} type={"str | Label | Case[Any]"} value={undefined}>
+
+A label or a declared [`Case`](/docs/agentsparty/protocol/language/core/Case).
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.choreography.chor.Located"}>
+
+An opaque `Located` at *receiver* (no consumption in v1).
+
+</PyFunctionReturn>
+
+</PyFunction>
+
+<PyFunction name={"decide"} type={"(self, sender, receiver) -> Decide"}>
+
+Open a alt: *sender* picks a case for *receiver*.
+
+Use as ``with c.decide(S, R) as verdict:`` then
+``with verdict.case(M):`` for each branch.
+
+<PySourceCode >
+
+```python
+def decide(self, sender: Role, receiver: Role) -> Decide:
+    """Open a alt: *sender* picks a case for *receiver*.
+
+    Use as ``with c.decide(S, R) as verdict:`` then
+    ``with verdict.case(M):`` for each branch.
+    """
+    return Decide(self, sender, receiver)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"sender"} type={"Role"} value={null} />
+<PyParameter name={"receiver"} type={"Role"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.choreography.chor.Decide"} />
+
+</PyFunction>
+
+<PyFunction name={"loop"} type={"(self, name=None) -> Loop"}>
+
+Open a recursion binder (``with c.loop() as draft:``).
+
+<PySourceCode >
+
+```python
+def loop(self, name: str | None = None) -> Loop:
+    """Open a recursion binder (``with c.loop() as draft:``).
+
+    Args:
+        name: Optional recursion-variable name. When omitted, a fresh
+            ``_loop_N`` name is generated. Pass an explicit name only when
+            a combinator twin must share the same binder for
+            :func:`~agentsparty.protocol.session.equal_session`.
+    """
+    return Loop(self, name=name)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"name"} type={"str | None"} value={"None"}>
+
+Optional recursion-variable name. When omitted, a fresh
+``_loop_N`` name is generated. Pass an explicit name only when
+a combinator twin must share the same binder for
+[`equal_session`](/docs/agentsparty/protocol/session).
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.choreography.chor.Loop"} />
+
+</PyFunction>
+
+<PyFunction name={"times"} type={"(self, n) -> Iterator[None]"}>
+
+Unroll the loop body *n* times (``for _ in c.times(n):``).
+
+The body runs once under the tracer; the AST is ``repeat(n, body)``.
+
+<PySourceCode >
+
+```python
+def times(self, n: int) -> Iterator[None]:
+    """Unroll the loop body *n* times (``for _ in c.times(n):``).
+
+    The body runs once under the tracer; the AST is ``repeat(n, body)``.
+    """
+    with self._times_scope(n):
+        yield
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"n"} type={"int"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"collections.abc.Iterator[None]"} />
+
+</PyFunction>
+
+<PyFunction name={"parallel"} type={"(self) -> Parallel"}>
+
+Open a parallel split: ``with c.parallel() as split:`` / ``branch()``.
+
+<PySourceCode >
+
+```python
+def parallel(self) -> Parallel:
+    """Open a parallel split: ``with c.parallel() as split:`` / ``branch()``."""
+    return Parallel(self)
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"agentsparty.choreography.chor.Parallel"} />
+
+</PyFunction>
+
+<PyFunction name={"stop"} type={"(self) -> None"}>
+
+Record an absorbing end and forbid further writes in this scope.
+
+<PySourceCode >
+
+```python
+def stop(self) -> None:
+    """Record an absorbing end and forbid further writes in this scope."""
+    self._append(session_stop)
+    self._current().terminated = True
+    self._current().source = self._frame()
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"include"} type={"(self, fragment) -> None"}>
+
+Splice a combinator-built open fragment into the trace.
+
+*fragment* must still be open (a [`Fragment`](/docs/agentsparty/protocol/language/core/Fragment)):
+its hole is the sequential continuation of the choreography. A closed
+`SessionType` has no hole — pass the
+combinator expression without ``.close()``.
+
+<PySourceCode >
+
+```python
+def include(self, fragment: Fragment[SessionType]) -> None:
+    """Splice a combinator-built open fragment into the trace.
+
+    *fragment* must still be open (a :class:`~agentsparty.protocol.language.core.Fragment`):
+    its hole is the sequential continuation of the choreography. A closed
+    :class:`~agentsparty.protocol.session.SessionType` has no hole — pass the
+    combinator expression without ``.close()``.
+
+    Args:
+        fragment: An open session fragment from facade A.
+
+    Raises:
+        TypeError: if a closed session protocol is passed instead of a fragment.
+    """
+    match fragment:
+        case Fragment() as frag:
+            self._append(frag)
+        case _:
+            raise TypeError(
+                'include() expects an open Fragment from the combinator '
+                'DSL; do not pass a closed SessionType (omit .close() so '
+                'the hole can continue the choreography)',
+            )
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"fragment"} type={"Fragment[SessionType]"} value={undefined}>
+
+An open session fragment from facade A.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

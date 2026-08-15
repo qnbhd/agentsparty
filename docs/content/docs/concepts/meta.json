@@ -1,0 +1,15 @@
+{
+  "title": "Core concepts",
+  "pages": [
+    "protocol-first",
+    "combinators",
+    "projection",
+    "knowledge-of-alt",
+    "control-and-content",
+    "participants-and-roles",
+    "choreography",
+    "composition-and-termination",
+    "journal-and-trace",
+    "models"
+  ]
+}

@@ -1,0 +1,112 @@
+# participant (/docs/agentsparty/participant/index)
+
+The participant contract: every executor bound to a role.
+
+<Tabs items={["Class","Functions"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"Choice"} href={"/docs/agentsparty/participant/Choice"} />
+<Card title={"Envelope"} href={"/docs/agentsparty/participant/Envelope"} />
+<Card title={"Cancelled"} href={"/docs/agentsparty/participant/Cancelled"} />
+<Card title={"Participant"} href={"/docs/agentsparty/participant/Participant"} />
+
+</Cards>
+
+</Tab>
+<Tab value={"Functions"}>
+
+<PyFunction name={"chosen_branch"} type={"(offered, label) -> B"}>
+
+Return *label*'s branch, or report one uniform selection failure.
+
+<PySourceCode >
+
+```python
+def chosen_branch(offered: NonEmptyMap[Label, B], label: Label) -> B:
+    """Return *label*'s branch, or report one uniform selection failure."""
+    try:
+        return offered[label]
+    except KeyError:
+        names = ', '.join(str(branch.label) for branch in offered.values())
+        raise SelectionError(f'chosen label {label} not on offer: {names}') from None
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"offered"} type={"NonEmptyMap[Label, B]"} value={null} />
+<PyParameter name={"label"} type={"Label"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.participant.B"} />
+
+</PyFunction>
+<PyFunction name={"says"} type={"(message, payload=None) -> Choice"}>
+
+A scripted or machine alt named by *message*.
+
+Accepts a [`Case`](/docs/agentsparty/protocol/language/core/Case) so a declared message is
+reused without restating its label string. ``Case.__call__`` is not used
+for this — `Choice` lives here, `Case` in the protocol.
+
+<PySourceCode >
+
+```python
+def says(message: str | Label | Case[object], payload: RawValue = None) -> Choice:
+    """A scripted or machine alt named by *message*.
+
+    Accepts a :class:`~agentsparty.protocol.language.core.Case` so a declared message is
+    reused without restating its label string. ``Case.__call__`` is not used
+    for this — :class:`Choice` lives here, :class:`Case` in the protocol.
+
+    Args:
+        message: A branch label or a declared :class:`Case`.
+        payload: The still-raw payload for the alt.
+
+    Returns:
+        A :class:`Choice` ready for a script or :class:`~agentsparty.machine.Machine`.
+    """
+    match message:
+        case Case() as declared:
+            return Choice(declared.label, payload)
+        case Label() as label:
+            return Choice(label, payload)
+        case str() as text:
+            return Choice(_as_label(text), payload)
+        case _:
+            assert_never(message)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"message"} type={"str | Label | Case[object]"} value={undefined}>
+
+A branch label or a declared `Case`.
+
+</PyParameter>
+<PyParameter name={"payload"} type={"RawValue"} value={"None"}>
+
+The still-raw payload for the alt.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.participant.Choice"}>
+
+class:`Choice` ready for a script or [`Machine`](/docs/agentsparty/machine/Machine).
+
+</PyFunctionReturn>
+
+</PyFunction>
+
+</Tab>
+
+</Tabs>

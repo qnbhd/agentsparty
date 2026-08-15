@@ -1,0 +1,49 @@
+# agentsparty
+> Protocol-first orchestration for AI agents
+
+Generated: 2026-08-16 · package 0.1.1 · commit b1faa72
+
+
+## Documentation map
+
+## Home
+- [Overview](/docs/index)
+
+## Start
+
+- [Core idea](/docs/start/core-idea)
+- [Install](/docs/start/install)
+- [Quickstart](/docs/start/quickstart)
+- [Security](/docs/start/security)
+- [What you can rely on](/docs/start/what-you-can-rely-on)
+
+## Core Concepts
+
+- [Choreography](/docs/concepts/choreography)
+- [Combinators](/docs/concepts/combinators)
+- [Composition and termination](/docs/concepts/composition-and-termination)
+- [Control and content](/docs/concepts/control-and-content)
+- [Journal and trace](/docs/concepts/journal-and-trace)
+- [Knowledge of alt](/docs/concepts/knowledge-of-alt)
+- [Models](/docs/concepts/models)
+- [Participants and roles](/docs/concepts/participants-and-roles)
+- [Projection](/docs/concepts/projection)
+- [Protocol-first](/docs/concepts/protocol-first)
+
+## Tutorials
+
+- [Add tools](/docs/tutorials/coding-harness/add-tools)
+- [Bind the roles and run](/docs/tutorials/coding-harness/bind-and-run)
+- [Declare the conversation](/docs/tutorials/coding-harness/declare-the-conversation)
+- [Start](/docs/tutorials/coding-harness/start)
+
+## Reference
+
+- [Error taxonomy](/docs/reference/error-taxonomy)
+- [Glossary](/docs/reference/glossary)
+- [Machine-readable docs](/docs/reference/machine-readable-docs)
+- [Protocol notation](/docs/reference/protocol-notation)
+
+## API reference
+- Generated symbols are documented on the site under /docs/agentsparty.
+

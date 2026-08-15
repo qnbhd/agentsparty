@@ -1,0 +1,53 @@
+---
+title: LoopHandle
+---
+
+Binder handle; `again` closes the iteration with a back-edge.
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, chor, name) -> None"}>
+
+Remember the recursion name used by the back-edge.
+
+<PySourceCode >
+
+```python
+def __init__(self, chor: Chor, name: str) -> None:
+    """Remember the recursion name used by the back-edge."""
+    self._chor = chor
+    self._name = name
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"chor"} type={"Chor"} value={null} />
+<PyParameter name={"name"} type={"str"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"again"} type={"(self) -> None"}>
+
+Close this loop iteration with a back-edge to the binder.
+
+<PySourceCode >
+
+```python
+def again(self) -> None:
+    """Close this loop iteration with a back-edge to the binder."""
+    self._chor._append(var(self._name))
+    self._chor._current().terminated = True
+    self._chor._current().source = self._chor._frame()
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

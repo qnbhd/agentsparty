@@ -1,0 +1,24 @@
+name: Documentation
+description: A confusing claim or a missing page
+title: '[docs] '
+labels: [documentation]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      description: Path under docs/ or a README section
+    validations:
+      required: true
+  - type: textarea
+    id: claim
+    attributes:
+      label: Confusing claim
+    validations:
+      required: true
+  - type: textarea
+    id: desired
+    attributes:
+      label: Desired outcome
+    validations:
+      required: true

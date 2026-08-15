@@ -1,0 +1,1161 @@
+# session (/docs/agentsparty/protocol/session/index)
+
+Session protocols and DSL (``alt``, ``msg``, ``owning``, …).
+
+Public facade: re-exports the session package surface. Implementation lives
+in leaf modules; do not import this package from those leaves.
+
+<Tabs items={["Class","Functions","Modules"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"Boundary"} href={"/docs/agentsparty/protocol/session/Boundary"} />
+
+</Cards>
+
+</Tab>
+<Tab value={"Functions"}>
+
+<PyFunction name={"as_endpoint"} type={"(node) -> EndpointType"}>
+
+Forget the single internal subject of *node*.
+
+Total on projections onto a singleton; an ``Interaction`` or ``Parallel``
+inside means the argument was not a single-subject view and raises
+ValueError.
+
+<PySourceCode >
+
+```python
+def as_endpoint(node: SingleSubject) -> EndpointType:
+    """Forget the single internal subject of *node*.
+
+    Total on projections onto a singleton; an ``Interaction`` or ``Parallel``
+    inside means the argument was not a single-subject view and raises
+    ValueError.
+
+    Args:
+        node: A single-subject session protocol (typically ``project_onto(H, {r})``).
+
+    Returns:
+        The subject-implicit endpoint protocol.
+
+    Raises:
+        ValueError: if *node* contains an internal interaction.
+    """
+    match node:
+        case SessionEnd():
+            return EndpointEnd()
+        case SessionVar(name=name):
+            return EndpointVar(name)
+        case SessionRec(name=name, body=body):
+            return EndpointRec(name, as_endpoint(cast(SingleSubject, body)))
+        case SendTo(receiver=receiver, branches=branches):
+            return EndpointSelect(receiver, _to_endpoint_branches(branches))
+        case RecvFrom(sender=sender, branches=branches):
+            return EndpointBranch(sender, _to_endpoint_branches(branches))
+        case _:  # pragma: no cover
+            assert_never(node)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SingleSubject"} value={undefined}>
+
+A single-subject session protocol (typically ``project_onto(H, \{r\})``).
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.endpoint.EndpointType"}>
+
+The subject-implicit endpoint protocol.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"as_global"} type={"(node) -> GlobalType"}>
+
+Narrow *node* to a global protocol after checking its interface.
+
+The runtime interprets closed choreographies only: a ``SendTo`` or
+``RecvFrom`` node means the protocol is a component; ``compose`` it
+with the rest of the system first.
+
+<PySourceCode >
+
+```python
+def as_global(node: SessionType) -> GlobalType:
+    """Narrow *node* to a global protocol after checking its interface.
+
+    The runtime interprets closed choreographies only: a ``SendTo`` or
+    ``RecvFrom`` node means the protocol is a component; ``compose`` it
+    with the rest of the system first.
+
+    Args:
+        node: A well-formed session protocol.
+
+    Returns:
+        The same node, carried as a global protocol.
+
+    Raises:
+        ValueError: if *node* contains an external interface node.
+    """
+    if epart(node):
+        raise ValueError(
+            'protocol still has an external interface; compose it with the '
+            'rest of the system first (as_global)',
+        )
+    return cast(GlobalType, node)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SessionType"} value={undefined}>
+
+A well-formed session protocol.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.session.types.GlobalType"}>
+
+The same node, carried as a global protocol.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"as_session"} type={"(subject, node) -> SessionType"}>
+
+Name the implicit subject of *node*.
+
+<PySourceCode >
+
+```python
+def as_session(subject: Role, node: EndpointType) -> SessionType:
+    """Name the implicit subject of *node*.
+
+    Args:
+        subject: The role that owns *node*.
+        node: A subject-implicit endpoint protocol.
+
+    Returns:
+        The session protocol with *subject* made explicit on every interface prefix.
+    """
+    match node:
+        case EndpointEnd():
+            return SessionEnd()
+        case EndpointVar(name=name):
+            return SessionVar(name)
+        case EndpointRec(name=name, body=body):
+            return SessionRec(name, as_session(subject, body))
+        case EndpointSelect(receiver=receiver, branches=branches):
+            return SendTo(subject, receiver, _from_endpoint_branches(subject, branches))
+        case EndpointBranch(sender=sender, branches=branches):
+            return RecvFrom(sender, subject, _from_endpoint_branches(subject, branches))
+        case _:  # pragma: no cover
+            assert_never(node)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"subject"} type={"Role"} value={undefined}>
+
+The role that owns *node*.
+
+</PyParameter>
+<PyParameter name={"node"} type={"EndpointType"} value={undefined}>
+
+A subject-implicit endpoint protocol.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.session.types.SessionType"}>
+
+The session protocol with *subject* made explicit on every interface prefix.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"assert_compatible"} type={"(contract, component) -> None"}>
+
+Check that *component* fits the part of *contract* it plays.
+
+The contract, restricted to the component's internal roles, must equal the
+component's interface.
+
+<PySourceCode >
+
+```python
+def assert_compatible(contract: SessionType, component: SessionType) -> None:
+    """Check that *component* fits the part of *contract* it plays.
+
+    The contract, restricted to the component's internal roles, must equal the
+    component's interface.
+
+    Raises:
+        CompositionError: with the path to the first disagreement.
+    """
+    expected = project_onto(contract, ipart(component))
+    offered = localise(component)
+    _refuse_composition(_same(expected, offered, ()), component)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"contract"} type={"SessionType"} value={null} />
+<PyParameter name={"component"} type={"SessionType"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+<PyFunction name={"assert_wellformed"} type={"(node) -> None"}>
+
+Reject open, unguarded, or ill-partitioned session protocols.
+
+Checks closedness (no free recursion variables), guardedness of every
+binder, and that internal and external role sets do not overlap. Raises
+`ValueError` on failure.
+
+<PySourceCode >
+
+```python
+def assert_wellformed(node: SessionType) -> None:
+    """Reject open, unguarded, or ill-partitioned session protocols.
+
+    Checks closedness (no free recursion variables), guardedness of every
+    binder, and that internal and external role sets do not overlap. Raises
+    :exc:`ValueError` on failure.
+
+    Args:
+        node: The session protocol to validate.
+
+    Raises:
+        ValueError: if *node* is open, unguarded, or mixes internal and
+            external roles on the same participant.
+    """
+    _walk(node, frozenset())
+    shared = ipart(node) & epart(node)
+    if shared:
+        _raise_shared_roles(shared)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SessionType"} value={undefined}>
+
+The session protocol to validate.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+<PyFunction name={"compose"} type={"(contract, components) -> SessionType"}>
+
+Build the one protocol the whole system follows.
+
+Each component must fit its part of *contract*; internal role sets must
+be pairwise disjoint. Roles of *contract* not owned by any component are
+served by the contract itself, so an orchestrator's protocol may double
+as the contract. When *contract* is global, the result is global and
+ready for the runtime.
+
+<PySourceCode >
+
+```python
+def compose(contract: SessionType, components: Sequence[SessionType]) -> SessionType:
+    """Build the one protocol the whole system follows.
+
+    Each component must fit its part of *contract*; internal role sets must
+    be pairwise disjoint. Roles of *contract* not owned by any component are
+    served by the contract itself, so an orchestrator's protocol may double
+    as the contract. When *contract* is global, the result is global and
+    ready for the runtime.
+
+    Args:
+        contract: The inter-component compatibility type.
+        components: Subprotocols with disjoint internal role sets.
+
+    Returns:
+        The composed session protocol (global when *contract* and all interfaces absorb).
+
+    Raises:
+        CompositionError: if a component does not fit the contract or
+            build-back is undefined.
+        AssertionError: if internal role sets overlap.
+    """
+    assertions.pre(expr=_disjoint(components), message='components must own disjoint role sets')
+
+    composed = reduce(_build_one, components, contract)
+    component_interfaces = [ipart(component) for component in components]
+    all_interfaces = set().union(*component_interfaces)
+    remaining = set(epart(composed)) & all_interfaces
+    assertions.post(
+        expr=not remaining,
+        message='composition must absorb every interface it was given',
+    )
+    return composed
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"contract"} type={"SessionType"} value={undefined}>
+
+The inter-component compatibility type.
+
+</PyParameter>
+<PyParameter name={"components"} type={"Sequence[SessionType]"} value={undefined}>
+
+Subprotocols with disjoint internal role sets.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.session.types.SessionType"}>
+
+The composed session protocol (global when *contract* and all interfaces absorb).
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"ensure_session"} type={"(node) -> SessionType"}>
+
+Close a `Fragment` at a library boundary; pass a closed type through.
+
+Boundaries that historically required a sealed session protocol
+(``AgentRuntime``, ``Cast``, ``render``, ``project``, ``project_all``)
+call this so the user need not write ``.close()`` by hand. The operation
+is total: `close` fills the hole with the fragment's own
+end.
+
+<PySourceCode >
+
+```python
+def ensure_session(node: SessionType | Fragment[SessionType]) -> SessionType:
+    """Close a :class:`Fragment` at a library boundary; pass a closed type through.
+
+    Boundaries that historically required a sealed session protocol
+    (``AgentRuntime``, ``Cast``, ``render``, ``project``, ``project_all``)
+    call this so the user need not write ``.close()`` by hand. The operation
+    is total: :meth:`Fragment.close` fills the hole with the fragment's own
+    end.
+
+    Args:
+        node: A closed session protocol, or a still-open fragment of one.
+
+    Returns:
+        A closed :class:`SessionType`.
+    """
+    match node:
+        case Fragment() as fragment:
+            return cast(SessionType, fragment.close())
+        case _:
+            return node
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SessionType | Fragment[SessionType]"} value={undefined}>
+
+A closed session protocol, or a still-open fragment of one.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.session.types.SessionType"}>
+
+A closed `SessionType`.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"epart"} type={"(node) -> frozenset[Role]"}>
+
+External participants of *node*.
+
+<PySourceCode >
+
+```python
+def epart(node: SessionType) -> frozenset[Role]:
+    """External participants of *node*.
+
+    Args:
+        node: A session protocol tree.
+
+    Returns:
+        Roles that appear only as the peer of an external interface prefix.
+    """
+    match node:
+        case SessionEnd() | SessionVar():
+            return frozenset()
+        case SessionRec(body=body):
+            return epart(body)
+        case Interaction() | SendTo() | RecvFrom() as prefix:
+            return _epart_prefix(prefix)
+        case Parallel(branches=branches):
+            return frozenset().union(*(epart(branch) for branch in branches))
+        case _:  # pragma: no cover
+            assert_never(node)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SessionType"} value={undefined}>
+
+A session protocol tree.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"frozenset"}>
+
+Roles that appear only as the peer of an external interface prefix.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"equal_session"} type={"(left, right) -> bool"}>
+
+Whether *left* and *right* are equal under the project's payload identity.
+
+<PySourceCode >
+
+```python
+def equal_session(left: SessionType, right: SessionType) -> bool:
+    """Whether *left* and *right* are equal under the project's payload identity.
+
+    Args:
+        left: A session protocol.
+        right: Another session protocol.
+
+    Returns:
+        ``True`` when structure, roles, labels, codec names, intents and
+        deadlines agree.
+    """
+    return holds(_same(left, right, ()))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"left"} type={"SessionType"} value={undefined}>
+
+A session protocol.
+
+</PyParameter>
+<PyParameter name={"right"} type={"SessionType"} value={undefined}>
+
+Another session protocol.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"bool"}>
+
+``True`` when structure, roles, labels, codec names, intents and
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"free_vars"} type={"(node) -> frozenset[str]"}>
+
+Names of free recursion variables in *node*.
+
+<PySourceCode >
+
+```python
+def free_vars(node: SessionType) -> frozenset[str]:
+    """Names of free recursion variables in *node*.
+
+    Args:
+        node: A session protocol tree (possibly open).
+
+    Returns:
+        The set of recursion-variable names not bound by an enclosing ``μ``.
+    """
+    match node:
+        case SessionEnd() | Parallel():
+            # Parallel branches are closed by construction (see ``_parallel``).
+            return frozenset()
+        case SessionVar(name=name):
+            return frozenset((name,))
+        case (
+            Interaction(branches=branches) | SendTo(branches=branches) | RecvFrom(branches=branches)
+        ):
+            return frozenset().union(
+                *(free_vars(branch.continuation) for branch in branches.values()),
+            )
+        case SessionRec(name=name, body=body):
+            return free_vars(body) - {name}
+        case _:  # pragma: no cover
+            assert_never(node)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SessionType"} value={undefined}>
+
+A session protocol tree (possibly open).
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"frozenset"}>
+
+The set of recursion-variable names not bound by an enclosing ``μ``.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"ipart"} type={"(node) -> frozenset[Role]"}>
+
+Internal participants of *node*.
+
+<PySourceCode >
+
+```python
+def ipart(node: SessionType) -> frozenset[Role]:
+    """Internal participants of *node*.
+
+    Args:
+        node: A session protocol tree.
+
+    Returns:
+        Roles that act as subjects of internal interactions or of external
+        send/receive prefixes.
+    """
+    match node:
+        case SessionEnd() | SessionVar():
+            return frozenset()
+        case SessionRec(body=body):
+            return ipart(body)
+        case Interaction() | SendTo() | RecvFrom() as prefix:
+            return _ipart_prefix(prefix)
+        case Parallel(branches=branches):
+            return frozenset().union(*(ipart(branch) for branch in branches))
+        case _:  # pragma: no cover
+            assert_never(node)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SessionType"} value={undefined}>
+
+A session protocol tree.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"frozenset"}>
+
+Roles that act as subjects of internal interactions or of external
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"localise"} type={"(node) -> SessionType"}>
+
+Interface of a component: keep ``p!q``/``p?q``, drop ``p→q``.
+
+What a teammate may rely on — and the only thing compatibility reads.
+
+<PySourceCode >
+
+```python
+def localise(node: SessionType) -> SessionType:
+    """Interface of a component: keep ``p!q``/``p?q``, drop ``p→q``.
+
+    What a teammate may rely on — and the only thing compatibility reads.
+
+    Args:
+        node: A closed, guarded session protocol (typically a component).
+
+    Returns:
+        The external interface of *node*.
+    """
+    assert_wellformed(node)
+    return _localise(node)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SessionType"} value={undefined}>
+
+A closed, guarded session protocol (typically a component).
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.session.types.SessionType"}>
+
+The external interface of *node*.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"may_terminate"} type={"(node) -> bool"}>
+
+Whether some finite path of *node* reaches ``end``.
+
+Walks the closed type treating each bound recursion variable as a
+back-edge (a cycle). Equivalent to reachability of ``end`` on the finite
+state graph of a well-formed session protocol.
+
+<PySourceCode >
+
+```python
+def may_terminate(node: SessionType) -> bool:
+    """Whether some finite path of *node* reaches ``end``.
+
+    Walks the closed type treating each bound recursion variable as a
+    back-edge (a cycle). Equivalent to reachability of ``end`` on the finite
+    state graph of a well-formed session protocol.
+
+    Args:
+        node: A closed, guarded session protocol.
+
+    Returns:
+        ``True`` if at least one path ends; ``False`` for a pure loop with no
+        exit (a daemon protocol).
+
+    Raises:
+        ValueError: if *node* is open or unguarded.
+    """
+    assert_wellformed(node)
+    return _may_end(node)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SessionType"} value={undefined}>
+
+A closed, guarded session protocol.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"bool"}>
+
+``True`` if at least one path ends; ``False`` for a pure loop with no
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"must_terminate"} type={"(node) -> bool"}>
+
+Whether every path of *node* reaches ``end`` in finitely many steps.
+
+Dual of `may_terminate`: ``True`` only when there is no cycle and no
+path that fails to reach ``end``. A recursive protocol with an exit branch
+may terminate without being obliged to.
+
+<PySourceCode >
+
+```python
+def must_terminate(node: SessionType) -> bool:
+    """Whether every path of *node* reaches ``end`` in finitely many steps.
+
+    Dual of :func:`may_terminate`: ``True`` only when there is no cycle and no
+    path that fails to reach ``end``. A recursive protocol with an exit branch
+    may terminate without being obliged to.
+
+    Args:
+        node: A closed, guarded session protocol.
+
+    Returns:
+        ``True`` if every path ends; ``False`` if some path loops or cannot
+        finish.
+
+    Raises:
+        ValueError: if *node* is open or unguarded.
+    """
+    assert_wellformed(node)
+    return _must_end(node)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SessionType"} value={undefined}>
+
+A closed, guarded session protocol.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"bool"}>
+
+``True`` if every path ends; ``False`` if some path loops or cannot
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"owning"} type={"(first, *rest)"}>
+
+Declare a component boundary from the roles it owns.
+
+<PySourceCode >
+
+```python
+def owning(first: Role, /, *rest: Role):
+    """Declare a component boundary from the roles it owns.
+
+    Args:
+        first: At least one owned role (positional-only; an empty component
+            is a static error).
+        *rest: Any further owned roles.
+
+    Returns:
+        A :class:`Boundary` ready for :meth:`Boundary.defining`.
+
+    Examples:
+        >>> from agentsparty.protocol import Text, msg, owning, render
+        >>> from agentsparty.kernel.role import roles
+        >>> Planner, Retriever, Ranker, Writer = roles('Planner', 'Retriever', 'Ranker', 'Writer')
+        >>> Search = owning(Retriever, Ranker)
+        >>> search = Search.defining(
+        ...     msg[Planner, Retriever]('Query', Text)
+        ...     >> msg[Retriever, Ranker]('Candidates', Text)
+        ...     >> msg[Ranker, Retriever]('Ranked', Text)
+        ...     >> msg[Retriever, Writer]('Passages', Text)
+        ... )
+        >>> print(render(search).splitlines()[0])
+        Planner?Retriever : Query(str)
+    """
+    return Boundary(frozenset((first, *rest)))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"first"} type={"Role"} value={undefined}>
+
+At least one owned role (positional-only; an empty component
+is a static error).
+
+</PyParameter>
+<PyParameter name={"rest"} type={"Role"} value={"()"} />
+
+</div>
+
+<PyFunctionReturn type={null}>
+
+class:`Boundary` ready for `defining`.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"par"} type={"(first, second, *rest) -> Fragment[SessionType]"}>
+
+Independent composition: *first*, *second* and *rest* run side by side.
+
+Branches own disjoint roles and exchange no message, so there is no join
+and nothing may follow: writing ``par(...) >> more`` raises, because
+silently absorbing *more* would delete work. Put the continuation inside
+the branch that owns its roles.
+
+<PySourceCode >
+
+```python
+def par(
+    first: Fragment[SessionType],
+    second: Fragment[SessionType],
+    *rest: Fragment[SessionType],
+) -> Fragment[SessionType]:
+    """Independent composition: *first*, *second* and *rest* run side by side.
+
+    Branches own disjoint roles and exchange no message, so there is no join
+    and nothing may follow: writing ``par(...) >> more`` raises, because
+    silently absorbing *more* would delete work. Put the continuation inside
+    the branch that owns its roles.
+
+    Args:
+        first: The first independent branch.
+        second: The second independent branch.
+        *rest: Any further independent branches.
+
+    Raises:
+        ValueError: if something follows the parallel composition, if a branch
+            is open, or if two branches share a role.
+
+    Examples:
+        >>> from agentsparty.protocol import msg, par, render
+        >>> from agentsparty.kernel.role import roles
+        >>> Auditor, Scanner, Archivist, Notary = roles('Auditor', 'Scanner', 'Archivist', 'Notary')
+        >>> split = par(
+        ...     msg[Auditor, Scanner]('Scan'),
+        ...     msg[Archivist, Notary]('File'),
+        ... ).close()
+        >>> print(render(split).splitlines()[0])
+        par {
+    """
+    return Fragment(partial(_build_par, first, second, rest), SessionEnd())
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"first"} type={"Fragment[SessionType]"} value={undefined}>
+
+The first independent branch.
+
+</PyParameter>
+<PyParameter name={"second"} type={"Fragment[SessionType]"} value={undefined}>
+
+The second independent branch.
+
+</PyParameter>
+<PyParameter name={"rest"} type={"Fragment[SessionType]"} value={"()"} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Fragment[agentsparty.protocol.session.types.SessionType]"} />
+
+</PyFunction>
+<PyFunction name={"participants"} type={"(node) -> list[Role]"}>
+
+Every role mentioned by the protocol, in order of first appearance.
+
+<PySourceCode >
+
+```python
+def participants(node: SessionType) -> list[Role]:
+    """Every role mentioned by the protocol, in order of first appearance."""
+    roles = (role for prefix in _walk(node) for role in (prefix.sender, prefix.receiver))
+    return list(dict.fromkeys(roles))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SessionType"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"list[agentsparty.kernel.role.Role]"} />
+
+</PyFunction>
+<PyFunction name={"project"} type={"(node, subj) -> EndpointType"}>
+
+Derive the endpoint protocol *subj* has to follow.
+
+Validates well-formedness of *node* once at the root, then projects.
+Implemented as the singleton special case of `project_onto`. An open
+[`Fragment`](/docs/agentsparty/protocol/language/core/Fragment) is closed at this boundary.
+
+<PySourceCode >
+
+```python
+def project(node: SessionType | Fragment[SessionType], subj: Role) -> EndpointType:
+    """Derive the endpoint protocol *subj* has to follow.
+
+    Validates well-formedness of *node* once at the root, then projects.
+    Implemented as the singleton special case of :func:`project_onto`. An open
+    :class:`~agentsparty.protocol.language.core.Fragment` is closed at this boundary.
+
+    Args:
+        node: A closed, guarded session protocol (choreography or a component),
+            or a fragment that will be closed first.
+        subj: The role whose endpoint view is required.
+
+    Raises:
+        ValueError: if *node* is open or unguarded.
+        ProjectionError: if merge is undefined for an observer of a alt.
+    """
+    projected = project_onto(ensure_session(node), frozenset((subj,)))
+    return as_endpoint(cast(SingleSubject, projected))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SessionType | Fragment[SessionType]"} value={undefined}>
+
+A closed, guarded session protocol (choreography or a component),
+or a fragment that will be closed first.
+
+</PyParameter>
+<PyParameter name={"subj"} type={"Role"} value={undefined}>
+
+The role whose endpoint view is required.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.session._bridge.EndpointType"} />
+
+</PyFunction>
+<PyFunction name={"project_all"} type={"(node) -> list[tuple[Role, EndpointType]]"}>
+
+Project *node* for every participant, in order of first appearance.
+
+An open [`Fragment`](/docs/agentsparty/protocol/language/core/Fragment) is closed at this boundary.
+
+<PySourceCode >
+
+```python
+def project_all(
+    node: SessionType | Fragment[SessionType],
+) -> list[tuple[Role, EndpointType]]:
+    """Project *node* for every participant, in order of first appearance.
+
+    An open :class:`~agentsparty.protocol.language.core.Fragment` is closed at this boundary.
+
+    Args:
+        node: The session protocol to project, or a fragment that will be closed.
+
+    Returns:
+        Pairs of ``(role, endpoint protocol)``, one per participant.
+    """
+    closed = ensure_session(node)
+    return [(subject, project(closed, subject)) for subject in participants(closed)]
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SessionType | Fragment[SessionType]"} value={undefined}>
+
+The session protocol to project, or a fragment that will be closed.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"list"}>
+
+Pairs of ``(role, endpoint protocol)``, one per participant.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"project_onto"} type={"(node, focus) -> SessionType"}>
+
+Generalised projection of *node* onto the roles in *focus*.
+
+Precondition: *focus* contains no external participant of *node* —
+projection is defined onto internal roles only.
+
+<PySourceCode >
+
+```python
+def project_onto(node: SessionType, focus: frozenset[Role]) -> SessionType:
+    """Generalised projection of *node* onto the roles in *focus*.
+
+    Precondition: *focus* contains no external participant of *node* —
+    projection is defined onto internal roles only.
+
+    Args:
+        node: A closed, guarded session protocol.
+        focus: The set of roles to retain as internal.
+
+    Returns:
+        The session protocol as seen by *focus*.
+
+    Raises:
+        ValueError: if *node* is ill-formed.
+        AssertionError: if *focus* intersects ``epart(node)``.
+        ProjectionError: if merge is undefined for an observer of a alt.
+    """
+    assert_wellformed(node)
+    pre(expr=not (focus & epart(node)), message='projection is defined onto internal roles only')
+    return _restrict(node, focus)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SessionType"} value={undefined}>
+
+A closed, guarded session protocol.
+
+</PyParameter>
+<PyParameter name={"focus"} type={"frozenset[Role]"} value={undefined}>
+
+The set of roles to retain as internal.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.session.types.SessionType"}>
+
+The session protocol as seen by *focus*.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"rec"} type={"(name, body) -> Fragment[SessionType]"}>
+
+Create a recursive session fragment ``μ name.body``.
+
+<PySourceCode >
+
+```python
+def rec(name: str, body: Fragment[SessionType]) -> Fragment[SessionType]:
+    """Create a recursive session fragment ``μ name.body``."""
+    return Fragment(partial(_build_rec, name, body), SessionEnd())
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"name"} type={"str"} value={null} />
+<PyParameter name={"body"} type={"Fragment[SessionType]"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Fragment[agentsparty.protocol.session.types.SessionType]"} />
+
+</PyFunction>
+<PyFunction name={"unfold"} type={"(node) -> SessionType"}>
+
+Unfold one recursion step, replacing the binder with the recursion itself.
+
+No-op unless *node* is a ``Rec``. Requires a closed argument: the runtime
+root is checked by `assert_wellformed`, and each unfold preserves
+closedness. Open terms are not capture-avoiding; do not call ``unfold`` on
+open protocols.
+
+<PySourceCode >
+
+```python
+def unfold(node: SessionType) -> SessionType:
+    """Unfold one recursion step, replacing the binder with the recursion itself.
+
+    No-op unless *node* is a ``Rec``. Requires a closed argument: the runtime
+    root is checked by :func:`assert_wellformed`, and each unfold preserves
+    closedness. Open terms are not capture-avoiding; do not call ``unfold`` on
+    open protocols.
+
+    Args:
+        node: A closed session protocol.
+
+    Returns:
+        The body of *node* with free occurrences of the binder replaced by
+        *node* itself, or *node* unchanged when it is not a ``Rec``.
+    """
+    match node:
+        case SessionRec(name=name, body=body):
+            return _subst(body, name, node)
+        case _:
+            return node
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SessionType"} value={undefined}>
+
+A closed session protocol.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.session.types.SessionType"}>
+
+The body of *node* with free occurrences of the binder replaced by
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"var"} type={"(name) -> Fragment[SessionType]"}>
+
+Recursion variable leaf ``t`` — absorbs the sequential tail, like ``stop``.
+
+<PySourceCode >
+
+```python
+def var(name: str) -> Fragment[SessionType]:
+    """Recursion variable leaf ``t`` — absorbs the sequential tail, like ``stop``.
+
+    Args:
+        name: The recursion-variable name (must match an enclosing ``rec``).
+    """
+    return Fragment.halt(SessionVar(name))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"name"} type={"str"} value={undefined}>
+
+The recursion-variable name (must match an enclosing ``rec``).
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Fragment[agentsparty.protocol.session.types.SessionType]"} />
+
+</PyFunction>
+
+</Tab>
+<Tab value={"Modules"}>
+
+<Cards >
+
+<Card href={"/docs/agentsparty/protocol/session/types"} title={"types"} />
+
+</Cards>
+
+</Tab>
+
+</Tabs>

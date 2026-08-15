@@ -1,0 +1,81 @@
+---
+title: chor
+---
+
+Tracer that records choreography operators into session fragments.
+
+<Tabs items={["Class","Functions"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"Located"} href={"/docs/agentsparty/choreography/chor/Located"} />
+<Card title={"Chor"} href={"/docs/agentsparty/choreography/chor/Chor"} />
+<Card title={"Decide"} href={"/docs/agentsparty/choreography/chor/Decide"} />
+<Card title={"Verdict"} href={"/docs/agentsparty/choreography/chor/Verdict"} />
+<Card title={"CaseBody"} href={"/docs/agentsparty/choreography/chor/CaseBody"} />
+<Card title={"Loop"} href={"/docs/agentsparty/choreography/chor/Loop"} />
+<Card title={"LoopHandle"} href={"/docs/agentsparty/choreography/chor/LoopHandle"} />
+<Card title={"Parallel"} href={"/docs/agentsparty/choreography/chor/Parallel"} />
+<Card title={"BranchBody"} href={"/docs/agentsparty/choreography/chor/BranchBody"} />
+
+</Cards>
+
+</Tab>
+<Tab value={"Functions"}>
+
+<PyFunction name={"choreography"} type={"(fn) -> Callable[P, SessionType]"}>
+
+Turn a procedure that records on a `Chor` into a session builder.
+
+The decorated function receives ``c: Chor`` as its first argument and may
+take further parameters. The return value is a **builder**
+``(*args, **kwargs) -> SessionType`` so parameterised protocols stay
+expressible and double-building is deterministic.
+
+<PySourceCode >
+
+```python
+def choreography(
+    fn: Callable[Concatenate[Chor, P], None],
+) -> Callable[P, SessionType]:
+    """Turn a procedure that records on a :class:`Chor` into a session builder.
+
+    The decorated function receives ``c: Chor`` as its first argument and may
+    take further parameters. The return value is a **builder**
+    ``(*args, **kwargs) -> SessionType`` so parameterised protocols stay
+    expressible and double-building is deterministic.
+
+    Args:
+        fn: A function ``(c: Chor, ...) -> None`` that only records operators.
+
+    Returns:
+        A function that builds a closed :class:`~agentsparty.protocol.session.SessionType`.
+    """
+    return partial(_build_choreography, fn)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"fn"} type={"Callable[Concatenate[Chor, P], None]"} value={undefined}>
+
+A function ``(c: Chor, ...) -> None`` that only records operators.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"collections.abc.Callable"}>
+
+A function that builds a closed `SessionType`.
+
+</PyFunctionReturn>
+
+</PyFunction>
+
+</Tab>
+
+</Tabs>

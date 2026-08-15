@@ -1,0 +1,55 @@
+---
+title: Verdict
+---
+
+Handle returned by `Decide`; opens labelled case bodies.
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, decide) -> None"}>
+
+Prepare a handle for one alt recorder.
+
+<PySourceCode >
+
+```python
+def __init__(self, decide: Decide) -> None:
+    """Prepare a handle for one alt recorder."""
+    self._decide = decide
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"decide"} type={"Decide"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"case"} type={"(self, message) -> CaseBody"}>
+
+Open a body for the declared branch label.
+
+<PySourceCode >
+
+```python
+def case(self, message: Case[Any] | str | Label) -> CaseBody:
+    """Open a body for the declared branch label."""
+    return CaseBody(self._decide, message)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"message"} type={"Case[Any] | str | Label"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.choreography.chor.CaseBody"} />
+
+</PyFunction>

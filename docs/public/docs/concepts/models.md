@@ -1,0 +1,62 @@
+# Models (/docs/concepts/models)
+
+`OpenAIModel` speaks the OpenAI Responses API. Wrappers nest: `Retrying`
+retries `ModelUnavailable`, `fallback` tries the next model, `Metered`
+refuses the next call once receipts pass a cap.
+
+```python exec
+from agentsparty.llm.compose import Metered, Retrying, Unavailable, fallback
+
+primary = Unavailable('primary down')
+backup = Unavailable('backup down')
+model = fallback(
+    Retrying(primary, attempts=2),
+    Metered(backup, tokens=8_000),
+)
+print(type(model).__name__)
+```
+
+Each wrapper is itself a `LanguageModel`. The order *is* the nesting you
+wrote: there is no registry and no hook list.
+
+## OpenAIModel
+
+Construct the adapter with a model id and an `AsyncOpenAI` client. Pass
+`max_retries=0` and a finite `timeout` on the client so retry policy lives
+in `Retrying` and a hung transport cannot stall the session. See
+[security](/docs/start/security).
+
+```python compile
+from openai import AsyncOpenAI
+from agentsparty import OpenAIModel
+from agentsparty.llm.compose import Metered, Retrying, fallback
+
+client = AsyncOpenAI(max_retries=0, timeout=30.0)
+primary = OpenAIModel('gpt-5.6-luna', client)
+backup = OpenAIModel('gpt-5.6-luna', client)
+model = fallback(
+    Retrying(primary, attempts=2),
+    Metered(backup, tokens=8_000),
+)
+print(type(model).__name__)
+```
+
+An `Agent` takes the resulting model. The protocol never sees the wrapper
+stack; a transformer maps a request to an answer to that same request.
+
+## Wrappers
+
+| Wrapper | Behaviour |
+| --- | --- |
+| [[agentsparty.llm.compose.Retrying]] | Retry `ModelUnavailable` up to `attempts` |
+| [[agentsparty.llm.compose.fallback]] | Try the next model after the previous one fails |
+| [[agentsparty.llm.compose.Metered]] | Refuse the next call once receipts pass a cap |
+
+`Unavailable` is the honest value for "no model configured": putting it in
+front of a fallback chain changes nothing.
+
+A worked composition lives in `examples/online/model_composition.py`. The
+participant that consumes a model is an `Agent`; see
+[participants and roles](/docs/concepts/participants-and-roles). See
+[[agentsparty.llm.openai.OpenAIModel]].
+

@@ -1,0 +1,60 @@
+---
+title: Mapped
+---
+
+Tracer that rewrites or drops each event before forwarding it.
+
+## Attributes
+
+<PyAttribute name={"transform"} type={"Callable[[Event], Event | None]"} value={null} />
+
+<PyAttribute name={"inner"} type={"Tracer"} value={null} />
+
+## Functions
+
+<PyFunction name={"record"} type={"(self, event) -> None"}>
+
+Forward ``transform(event)`` unless it is ``None``.
+
+<PySourceCode >
+
+```python
+def record(self, event: Event) -> None:
+    """Forward ``transform(event)`` unless it is ``None``.
+
+    Args:
+        event: The event to transform.
+    """
+    mapped_event = self.transform(event)
+    if mapped_event is not None:
+        self.inner.record(mapped_event)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"event"} type={"Event"} value={undefined}>
+
+The event to transform.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"__init__"} type={"(self, transform, inner) -> None"}>
+
+<div >
+
+<PyParameter name={"transform"} type={"Callable[[Event], Event | None]"} value={null} />
+<PyParameter name={"inner"} type={"Tracer"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

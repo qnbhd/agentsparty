@@ -1,0 +1,147 @@
+# tracing (/docs/agentsparty/tracing/index)
+
+Observability for protocol sessions: domain signals, spans and sinks.
+
+``SqliteTracer`` is deliberately not re-exported — same reasoning as
+``agentsparty.llm`` not re-exporting provider backends: a sink that touches a
+database stays an explicit import::
+
+    from agentsparty.tracing.sqlite import SqliteTracer
+
+<Tabs items={["Functions","Modules"]}>
+
+<Tab value={"Functions"}>
+
+<PyFunction name={"text_of"} type={"(events) -> Mapping[SpanId, str]"}>
+
+What each model span said, assembled from the fragments it streamed.
+
+The industry's ``get_full_text()``, as a pure fold rather than a buffer on
+a stream object. An adapter that streams honestly satisfies
+
+``text_of(events)[span] == answer.text``
+
+for the ``ModelAnswered`` that closes that span. agentsparty states that law and
+tests it against its own stubs, but cannot enforce it: the fragments are
+the adapter's word, and half a JSON payload decodes to nothing either way.
+
+<PySourceCode >
+
+```python
+def text_of(events: Iterable[Event]) -> Mapping[SpanId, str]:
+    """What each model span said, assembled from the fragments it streamed.
+
+    The industry's ``get_full_text()``, as a pure fold rather than a buffer on
+    a stream object. An adapter that streams honestly satisfies
+
+    ``text_of(events)[span] == answer.text``
+
+    for the ``ModelAnswered`` that closes that span. agentsparty states that law and
+    tests it against its own stubs, but cannot enforce it: the fragments are
+    the adapter's word, and half a JSON payload decodes to nothing either way.
+
+    Args:
+        events: Recorded events, from any tracer.
+
+    Returns:
+        One assembled text per model span that streamed; spans that streamed
+        nothing are absent rather than present with an empty string.
+    """
+    said: defaultdict[SpanId, str] = defaultdict(str)
+    for span, fragment in _fragments(events):
+        said[span] += fragment
+    return dict(said)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"events"} type={"Iterable[Event]"} value={undefined}>
+
+Recorded events, from any tracer.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"collections.abc.Mapping"}>
+
+One assembled text per model span that streamed; spans that streamed
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"usage_of"} type={"(events) -> Mapping[ModelId, Usage]"}>
+
+What each model was billed across *events*.
+
+A pure fold: it reads what a tracer already recorded and holds no state of
+its own. This is where the industry puts a callback handler and a context
+manager; agentsparty needs neither, because the receipts are already in the
+trace and bills add up.
+
+<PySourceCode >
+
+```python
+def usage_of(events: Iterable[Event]) -> Mapping[ModelId, Usage]:
+    """What each model was billed across *events*.
+
+    A pure fold: it reads what a tracer already recorded and holds no state of
+    its own. This is where the industry puts a callback handler and a context
+    manager; agentsparty needs neither, because the receipts are already in the
+    trace and bills add up.
+
+    Args:
+        events: Recorded events, from any tracer.
+
+    Returns:
+        One total per model that answered; models that never answered are
+        absent rather than present with an empty bill.
+    """
+    billed: defaultdict[ModelId, Usage] = defaultdict(Usage)
+    for answer in _answers(events):
+        billed[answer.model] += answer.usage
+    return dict(billed)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"events"} type={"Iterable[Event]"} value={undefined}>
+
+Recorded events, from any tracer.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"collections.abc.Mapping"}>
+
+One total per model that answered; models that never answered are
+
+</PyFunctionReturn>
+
+</PyFunction>
+
+</Tab>
+<Tab value={"Modules"}>
+
+<Cards >
+
+<Card href={"/docs/agentsparty/tracing/facet"} title={"facet"} />
+<Card href={"/docs/agentsparty/tracing/sqlite"} title={"sqlite"} />
+<Card href={"/docs/agentsparty/tracing/memory"} title={"memory"} />
+<Card href={"/docs/agentsparty/tracing/types"} title={"types"} />
+<Card href={"/docs/agentsparty/tracing/stream"} title={"stream"} />
+<Card href={"/docs/agentsparty/tracing/queue"} title={"queue"} />
+<Card href={"/docs/agentsparty/tracing/signals"} title={"signals"} />
+<Card href={"/docs/agentsparty/tracing/model"} title={"model"} />
+<Card href={"/docs/agentsparty/tracing/scope"} title={"scope"} />
+
+</Cards>
+
+</Tab>
+
+</Tabs>

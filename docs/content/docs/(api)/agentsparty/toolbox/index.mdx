@@ -1,0 +1,179 @@
+---
+title: toolbox
+---
+
+Toolboxes: participants that answer requests instead of authoring intent.
+
+A toolbox binds a family of tools to a role whose projected endpoint protocol is a
+*service*: it never speaks first, and it answers every request it accepts, at
+once, to the role that asked. The protocol owns the request schema; a tool
+declares the codec it was written against so binding can reject a tool wired to
+the wrong branch.
+
+<Tabs items={["Class","Functions"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"Tool"} href={"/docs/agentsparty/toolbox/Tool"} />
+<Card title={"Toolbox"} href={"/docs/agentsparty/toolbox/Toolbox"} />
+
+</Cards>
+
+</Tab>
+<Tab value={"Functions"}>
+
+<PyFunction name={"tool"} type={"(label, request, answer) -> Tool[T]"}>
+
+Build a `Tool` for a label and its request codec.
+
+<PySourceCode >
+
+```python
+def tool(
+    label: str | Label,
+    request: Codec[T],
+    answer: Callable[[T], Awaitable[Choice]],
+) -> Tool[T]:
+    """Build a :class:`Tool` for a label and its request codec."""
+    return Tool(_as_label(label), request, answer)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"label"} type={"str | Label"} value={null} />
+<PyParameter name={"request"} type={"Codec[T]"} value={null} />
+<PyParameter name={"answer"} type={"Callable[[T], Awaitable[Choice]]"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.toolbox.Tool[agentsparty.toolbox.T]"} />
+
+</PyFunction>
+<PyFunction name={"tool_for"} type={"(declared, answer) -> Tool[Any]"}>
+
+Build a `Tool` from a case that already declares its codec.
+
+<PySourceCode >
+
+```python
+def tool_for(
+    declared: Case[Any],
+    answer: Callable[[Any], Awaitable[Choice]],
+) -> Tool[Any]:
+    """Build a :class:`Tool` from a case that already declares its codec."""
+    return Tool(declared.label, declared.payload, answer)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"declared"} type={"Case[Any]"} value={null} />
+<PyParameter name={"answer"} type={"Callable[[Any], Awaitable[Choice]]"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.toolbox.Tool[typing.Any]"} />
+
+</PyFunction>
+<PyFunction name={"reply"} type={"(label, payload=None) -> Choice"}>
+
+The answer a tool returns: the reply branch it picks and its raw payload.
+
+The payload stays raw here and is decoded at the boundary, so
+``branch.payload.decode(raw) == payload`` holds by construction and a
+journalled session replays the same value.
+
+<PySourceCode >
+
+```python
+def reply(label: str | Label | Case[Any], payload: RawValue = None) -> Choice:
+    """The answer a tool returns: the reply branch it picks and its raw payload.
+
+    The payload stays raw here and is decoded at the boundary, so
+    ``branch.payload.decode(raw) == payload`` holds by construction and a
+    journalled session replays the same value.
+
+    Args:
+        label: The reply branch the protocol offers for this request, or a
+            :class:`~agentsparty.protocol.language.core.Case` that names it.
+        payload: The raw form of the answer; ``None`` for a reply that carries
+            no value.
+
+    Returns:
+        The tool's alt among the reply branches.
+    """
+    match label:
+        case Case() as declared:
+            return Choice(declared.label, payload)
+        case _:
+            return Choice(_as_label(label), payload)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"label"} type={"str | Label | Case[Any]"} value={undefined}>
+
+The reply branch the protocol offers for this request, or a
+[`Case`](/docs/agentsparty/protocol/language/core/Case) that names it.
+
+</PyParameter>
+<PyParameter name={"payload"} type={"RawValue"} value={"None"}>
+
+The raw form of the answer; ``None`` for a reply that carries
+no value.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.participant.Choice"}>
+
+The tool's alt among the reply branches.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"service"} type={"(*tools) -> Callable[[Role, EndpointType], Participant]"}>
+
+Casting factory: bind *tools* when a service role is played.
+
+Returns a ``(role, endpoint) -> Toolbox`` for [`play`](/docs/agentsparty/runtime/Cast).
+
+<PySourceCode >
+
+```python
+def service(
+    *tools: Tool[Any],
+) -> Callable[[Role, EndpointType], Participant]:
+    """Casting factory: bind *tools* when a service role is played.
+
+    Returns a ``(role, endpoint) -> Toolbox`` for :meth:`~agentsparty.runtime.Cast.play`.
+
+    Args:
+        *tools: Exactly one tool per request the role's endpoint declares.
+    """
+    return partial(_bind_service, tools)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"tools"} type={"Tool[Any]"} value={"()"} />
+
+</div>
+
+<PyFunctionReturn type={"collections.abc.Callable[[agentsparty.kernel.role.Role, agentsparty.protocol.language.endpoint.EndpointType], agentsparty.participant.Participant]"} />
+
+</PyFunction>
+
+</Tab>
+
+</Tabs>

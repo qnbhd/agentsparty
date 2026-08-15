@@ -1,0 +1,137 @@
+.figure {
+  --equiv-bg: var(--color-fd-card, #fff);
+  --equiv-fg: var(--color-fd-foreground, #181717);
+  --equiv-muted: var(--color-fd-muted-foreground, #666);
+  --equiv-line: var(--color-fd-border, #ddd);
+  --equiv-accent: var(--color-fd-primary, #587315);
+
+  max-width: 40rem;
+  margin: 0.85rem auto 1.15rem;
+  overflow: hidden;
+  border: 1px solid var(--equiv-line);
+  border-radius: var(--ap-radius-panel);
+  background: var(--equiv-bg);
+  padding-block: 0.35rem;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  color: var(--equiv-fg);
+  font-family: 'Geist Mono', ui-monospace, monospace;
+}
+
+.facade,
+.treeNode,
+.treeLeaf {
+  fill: var(--equiv-bg);
+  stroke: var(--equiv-line);
+  stroke-width: 1.2;
+}
+
+.facade {
+  stroke: color-mix(in oklab, var(--equiv-accent) 70%, var(--equiv-line));
+  animation: facade-in 520ms cubic-bezier(.16,1,.3,1) both;
+}
+
+.facadeRight {
+  animation-delay: 90ms;
+}
+
+.facadeText,
+.treeText,
+.leafText,
+.equalText {
+  fill: var(--equiv-fg);
+  text-anchor: middle;
+}
+
+.facadeText {
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.arrow,
+.treeEdge {
+  fill: none;
+  stroke: color-mix(in oklab, var(--equiv-fg) 38%, var(--equiv-bg));
+  stroke-width: 1.25;
+  stroke-linecap: round;
+}
+
+.arrow {
+  stroke: var(--equiv-accent);
+  stroke-dasharray: 4 4;
+  animation: arrow-flow 1.4s linear infinite;
+}
+
+.tree {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tree-in 540ms 180ms cubic-bezier(.16,1,.3,1) both;
+}
+
+.treeNode {
+  stroke: color-mix(in oklab, var(--equiv-accent) 70%, var(--equiv-line));
+}
+
+.treeText {
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.leafText {
+  font-size: 8px;
+}
+
+.equalText {
+  fill: var(--equiv-accent);
+  font-size: 10px;
+  font-weight: 650;
+  animation: equal-in 420ms 380ms ease-out both;
+}
+
+.caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes facade-in {
+  from { opacity: 0; transform: translateX(-5px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes arrow-flow {
+  to { stroke-dashoffset: -16; }
+}
+
+@keyframes tree-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes equal-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .figure * {
+    animation: none !important;
+  }
+}
+
+@media print {
+  .figure {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+}

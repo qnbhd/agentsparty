@@ -1,0 +1,673 @@
+# core (/docs/agentsparty/protocol/language/core/index)
+
+Protocol building blocks: ``Codec``, ``Fragment``, ``Case``, selection.
+
+<PyAttribute name={"Nothing"} type={"Codec[None]"} value={"Codec(name='undefined', schema=_NULL_SCHEMA, decode=as_nothing, carries_value=False)"} />
+
+<PyAttribute name={"Null"} type={"Codec[None]"} value={"Codec(name='null', schema=_NULL_SCHEMA, decode=as_null)"} />
+
+<PyAttribute name={"Text"} type={"Codec[str]"} value={"Codec(name='str', schema=(_schema({_TYPE_KEY: 'string'})), decode=as_text)"} />
+
+<PyAttribute name={"Integer"} type={"Codec[int]"} value={"Codec(name='int', schema=(_schema({_TYPE_KEY: 'integer'})), decode=as_integer)"} />
+
+<PyAttribute name={"Number"} type={"Codec[float]"} value={"Codec(name='float', schema=(_schema({_TYPE_KEY: 'number'})), decode=as_number)"} />
+
+<PyAttribute name={"Flag"} type={"Codec[bool]"} value={"Codec(name='bool', schema=(_schema({_TYPE_KEY: 'boolean'})), decode=as_flag)"} />
+
+<Tabs items={["Class","Functions"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"Codec"} href={"/docs/agentsparty/protocol/language/core/Codec"} />
+<Card title={"Label"} href={"/docs/agentsparty/protocol/language/core/Label"} />
+<Card title={"Fragment"} href={"/docs/agentsparty/protocol/language/core/Fragment"} />
+<Card title={"Deadline"} href={"/docs/agentsparty/protocol/language/core/Deadline"} />
+<Card title={"Case"} href={"/docs/agentsparty/protocol/language/core/Case"} />
+<Card title={"Labelled"} href={"/docs/agentsparty/protocol/language/core/Labelled"} />
+<Card title={"BranchCodec"} href={"/docs/agentsparty/protocol/language/core/BranchCodec"} />
+<Card title={"Chosen"} href={"/docs/agentsparty/protocol/language/core/Chosen"} />
+
+</Cards>
+
+</Tab>
+<Tab value={"Functions"}>
+
+<PyFunction name={"list_of"} type={"(item) -> Codec[list[T]]"}>
+
+A `Codec` for a JSON array whose entries decode with *item*.
+
+<PySourceCode >
+
+```python
+def list_of(item: Codec[T]) -> Codec[list[T]]:
+    """A :class:`Codec` for a JSON array whose entries decode with *item*.
+
+    Args:
+        item: The codec applied to every array element.
+    """
+    codec_name = f'list[{item.name}]'
+    return Codec(
+        name=codec_name,
+        schema=_schema({_TYPE_KEY: 'array', 'items': dict(item.schema)}),
+        decode=partial(_decode_list, item),
+    )
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"item"} type={"Codec[T]"} value={undefined}>
+
+The codec applied to every array element.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Codec[list[agentsparty.protocol.language.core.T]]"} />
+
+</PyFunction>
+<PyFunction name={"dict_of"} type={"(value) -> Codec[dict[str, T]]"}>
+
+A `Codec` for a JSON object whose values decode with *value*.
+
+<PySourceCode >
+
+```python
+def dict_of(value: Codec[T]) -> Codec[dict[str, T]]:
+    """A :class:`Codec` for a JSON object whose values decode with *value*.
+
+    Args:
+        value: The codec applied to every object value.
+    """
+    return Codec(
+        name=f'dict[str, {value.name}]',
+        schema=_schema(
+            {
+                _TYPE_KEY: _OBJECT_TYPE,
+                _ADDITIONAL_PROPERTIES_KEY: dict(value.schema),
+            },
+        ),
+        decode=partial(_decode_dict, value),
+    )
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"value"} type={"Codec[T]"} value={undefined}>
+
+The codec applied to every object value.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Codec[dict[str, agentsparty.protocol.language.core.T]]"} />
+
+</PyFunction>
+<PyFunction name={"one_of"} type={"(first, *rest) -> Codec[Any]"}>
+
+A `Codec` that tries each of *codecs* in order.
+
+<PySourceCode >
+
+```python
+def one_of(first: Codec[Any], *rest: Codec[Any]) -> Codec[Any]:
+    """A :class:`Codec` that tries each of *codecs* in order.
+
+    Args:
+        first: The first alternative to attempt.
+        *rest: Remaining alternatives to attempt, first match wins.
+    """
+    codecs = (first, *rest)
+
+    return Codec(
+        name=' | '.join(c.name for c in codecs),
+        schema=_schema({'anyOf': [dict(c.schema) for c in codecs]}),
+        decode=partial(_decode_one_of, codecs),
+    )
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"first"} type={"Codec[Any]"} value={undefined}>
+
+The first alternative to attempt.
+
+</PyParameter>
+<PyParameter name={"rest"} type={"Codec[Any]"} value={"()"} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Codec[typing.Any]"} />
+
+</PyFunction>
+<PyFunction name={"optional"} type={"(codec) -> Codec[T | None]"}>
+
+A `Codec` that accepts either *codec* or JSON ``null``.
+
+<PySourceCode >
+
+```python
+def optional(codec: Codec[T]) -> Codec[T | None]:
+    """A :class:`Codec` that accepts either *codec* or JSON ``null``.
+
+    Args:
+        codec: The codec used when the payload is not null.
+    """
+    return one_of(codec, Null)  # type: ignore[return-value]
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"codec"} type={"Codec[T]"} value={undefined}>
+
+The codec used when the payload is not null.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Codec[agentsparty.protocol.language.core.T | None]"} />
+
+</PyFunction>
+<PyFunction name={"refine"} type={"(codec, requirement, holds) -> Codec[T]"}>
+
+A `Codec` that accepts only values of *codec* satisfying *holds*.
+
+What the industry calls a task guardrail is this and nothing else: a pure
+predicate on the payload belongs to the type, so a value that leaves
+``decode`` is correct by construction and nothing downstream re-checks it.
+
+*requirement* does three jobs at once, which is why it is not optional: it
+names the refined codec (so a journal written under the old codec is
+refused by ``Decision.branch_in`` instead of replaying into the wrong
+session), it is the diagnosis in the raised `PayloadError`, and — via
+that error — it is the feedback [`Repair`](/docs/agentsparty/agent/Repair) sends back to
+the model.
+
+*holds* must be pure and total: it is called again on replay, and a
+predicate that raises is a bug in the caller, not a rejected payload.
+
+The schema is left untouched. It states the *shape* the provider must
+validate; a requirement it cannot enforce does not belong in it. What the
+author wants produced is said once, in the branch's ``intent``.
+
+<PySourceCode >
+
+```python
+def refine(
+    codec: Codec[T],
+    requirement: str,
+    holds: Callable[[T], bool],
+) -> Codec[T]:
+    """A :class:`Codec` that accepts only values of *codec* satisfying *holds*.
+
+    What the industry calls a task guardrail is this and nothing else: a pure
+    predicate on the payload belongs to the type, so a value that leaves
+    ``decode`` is correct by construction and nothing downstream re-checks it.
+
+    *requirement* does three jobs at once, which is why it is not optional: it
+    names the refined codec (so a journal written under the old codec is
+    refused by ``Decision.branch_in`` instead of replaying into the wrong
+    session), it is the diagnosis in the raised :exc:`PayloadError`, and — via
+    that error — it is the feedback :class:`~agentsparty.agent.Repair` sends back to
+    the model.
+
+    *holds* must be pure and total: it is called again on replay, and a
+    predicate that raises is a bug in the caller, not a rejected payload.
+
+    The schema is left untouched. It states the *shape* the provider must
+    validate; a requirement it cannot enforce does not belong in it. What the
+    author wants produced is said once, in the branch's ``intent``.
+
+    Args:
+        codec: The codec being refined.
+        requirement: The requirement, in the words a model should read.
+        holds: The predicate every accepted value must satisfy.
+
+    Returns:
+        The refined codec.
+
+    Raises:
+        ValueError: if *requirement* is blank.
+    """
+    if not requirement.strip():
+        raise ValueError('a refinement must state its requirement')
+
+    return Codec(
+        name=f'{codec.name} where {requirement}',
+        schema=codec.schema,
+        decode=partial(_decode_refined, codec, requirement, holds),
+        carries_value=codec.carries_value,
+    )
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"codec"} type={"Codec[T]"} value={undefined}>
+
+The codec being refined.
+
+</PyParameter>
+<PyParameter name={"requirement"} type={"str"} value={undefined}>
+
+The requirement, in the words a model should read.
+
+</PyParameter>
+<PyParameter name={"holds"} type={"Callable[[T], bool]"} value={undefined}>
+
+The predicate every accepted value must satisfy.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Codec"}>
+
+The refined codec.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"json_model"} type={"(name, schema, parse) -> Codec[T]"}>
+
+Codec for a framework model that owns its JSON schema and parser.
+
+<PySourceCode >
+
+```python
+def json_model(
+    name: str,
+    schema: Mapping[str, object],
+    parse: Callable[[str], T],
+) -> Codec[T]:
+    """Codec for a framework model that owns its JSON schema and parser."""
+    schema_values = {str(key): value for key, value in schema.items()}
+    schema_map = _schema(schema_values)
+
+    return Codec(
+        name=name,
+        schema=schema_map,
+        decode=partial(_decode_json_model, name, parse),
+    )
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"name"} type={"str"} value={null} />
+<PyParameter name={"schema"} type={"Mapping[str, object]"} value={null} />
+<PyParameter name={"parse"} type={"Callable[[str], T]"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Codec[agentsparty.protocol.language.core.T]"} />
+
+</PyFunction>
+<PyFunction name={"codec_of"} type={"(annotation) -> Codec[Any]"}>
+
+Resolve a Python annotation or `Codec` to a payload codec.
+
+This is the single parse boundary for type annotations. Supported forms
+are the primitive registry, ``list[T]``, ``dict[str, T]``, an existing
+`Codec`, and values built by `record`. Everything else is a
+hard `TypeError` — no guessing, no pydantic/msgspec reflection.
+
+<PySourceCode >
+
+```python
+def codec_of(annotation: object) -> Codec[Any]:
+    """Resolve a Python annotation or :class:`Codec` to a payload codec.
+
+    This is the single parse boundary for type annotations. Supported forms
+    are the primitive registry, ``list[T]``, ``dict[str, T]``, an existing
+    :class:`Codec`, and values built by :func:`record`. Everything else is a
+    hard :exc:`TypeError` — no guessing, no pydantic/msgspec reflection.
+
+    Args:
+        annotation: A supported annotation, or an already-built codec.
+
+    Returns:
+        The codec for *annotation*.
+
+    Raises:
+        TypeError: if *annotation* is not a supported form.
+    """
+    codec = _codec_if_ready(annotation)
+    if codec is not None:
+        return codec
+    origin = get_origin(annotation)
+    args = get_args(annotation)
+    if origin is list and len(args) == 1:
+        return list_of(codec_of(args[0]))
+    is_dict_form = origin is dict and len(args) == 2
+    if is_dict_form and args[0] is str:
+        return dict_of(codec_of(args[1]))
+    raise TypeError(
+        f'unsupported annotation {annotation!r}; supported forms: {_SUPPORTED_FORMS}',
+    )
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"annotation"} type={"object"} value={undefined}>
+
+A supported annotation, or an already-built codec.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Codec"}>
+
+The codec for *annotation*.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"record"} type={"(title, **fields) -> Codec[dict[str, Any]]"}>
+
+A closed object codec: fixed string keys, ``additionalProperties: false``.
+
+Each field value is resolved with `codec_of`. The resulting schema
+lists every key as required and rejects extras — what strict provider
+modes demand of structured output. *title* is positional-only so a field
+may itself be named ``name``.
+
+<PySourceCode >
+
+```python
+def record(title: str, /, **fields: object) -> Codec[dict[str, Any]]:
+    """A closed object codec: fixed string keys, ``additionalProperties: false``.
+
+    Each field value is resolved with :func:`codec_of`. The resulting schema
+    lists every key as required and rejects extras — what strict provider
+    modes demand of structured output. *title* is positional-only so a field
+    may itself be named ``name``.
+
+    Args:
+        title: The codec name (also the schema title for diagnostics).
+        **fields: Field name to annotation or codec.
+
+    Returns:
+        A codec that decodes a JSON object into ``dict[str, Any]``.
+
+    Raises:
+        ValueError: if no fields are given.
+        TypeError: if a field annotation is not a supported form.
+    """
+    if not fields:
+        raise ValueError('record requires at least one field')
+    codecs = {key: codec_of(annotation) for key, annotation in fields.items()}
+    schema = _schema(
+        {
+            _TYPE_KEY: 'object',
+            'properties': {key: dict(codec.schema) for key, codec in codecs.items()},
+            'required': list(codecs),
+            'additionalProperties': False,
+        },
+    )
+
+    return Codec(
+        name=title,
+        schema=schema,
+        decode=partial(_decode_record, title, codecs),
+    )
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"title"} type={"str"} value={undefined}>
+
+The codec name (also the schema title for diagnostics).
+
+</PyParameter>
+<PyParameter name={"fields"} type={"object"} value={"{}"} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Codec"}>
+
+A codec that decodes a JSON object into ``dict[str, Any]``.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"case"} type={"(label, payload=Nothing, intent='', *, within=None) -> Case[Any]"}>
+
+A labelled case with an optional payload codec, intent, and deadline.
+
+<PySourceCode >
+
+```python
+def case(
+    label: str | Label,
+    payload: Codec[Any] | type[Any] | object = Nothing,
+    intent: str = '',
+    *,
+    within: Deadline | None = None,
+) -> Case[Any]:
+    """A labelled case with an optional payload codec, intent, and deadline.
+
+    Args:
+        label: The branch label, as text or a :class:`Label`.
+        payload: The codec for the payload, or a supported annotation resolved
+            by :func:`codec_of` (e.g. ``str``, ``list[str]``). Defaults to
+            :data:`Nothing`.
+        intent: What the sender is asked to produce on this branch, in one or
+            two sentences. It is shown to whoever authors the message — a model
+            or a person — and it is part of the protocol, so it enters
+            :func:`~agentsparty.protocol.render.render` and therefore the journal
+            digest. Absence is the empty text, not ``None``.
+        within: Optional wall-clock window the sender has to choose this
+            interaction. When set, it enters ``render`` / the journal digest
+            and the runtime enforces it with ``asyncio.wait_for`` on
+            ``select``. Absence is ``None`` (no deadline), not zero.
+    """
+    return Case(_as_label(label), codec_of(payload), intent=intent, within=within)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"label"} type={"str | Label"} value={undefined}>
+
+The branch label, as text or a `Label`.
+
+</PyParameter>
+<PyParameter name={"payload"} type={"Codec[Any] | type[Any] | object"} value={"Nothing"}>
+
+The codec for the payload, or a supported annotation resolved
+by `codec_of` (e.g. ``str``, ``list[str]``). Defaults to
+`Nothing`.
+
+</PyParameter>
+<PyParameter name={"intent"} type={"str"} value={"''"}>
+
+What the sender is asked to produce on this branch, in one or
+two sentences. It is shown to whoever authors the message — a model
+or a person — and it is part of the protocol, so it enters
+[`render`](/docs/agentsparty/protocol/render) and therefore the journal
+digest. Absence is the empty text, not ``None``.
+
+</PyParameter>
+<PyParameter name={"within"} type={"Deadline | None"} value={"None"}>
+
+Optional wall-clock window the sender has to choose this
+interaction. When set, it enters ``render`` / the journal digest
+and the runtime enforces it with ``asyncio.wait_for`` on
+``select``. Absence is ``None`` (no deadline), not zero.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Case[typing.Any]"} />
+
+</PyFunction>
+<PyFunction name={"branches_map"} type={"(branches) -> NonEmptyMap[Label, B]"}>
+
+Build a branch map; keys are derived from each branch's label.
+
+<PySourceCode >
+
+```python
+def branches_map(branches: Iterable[B]) -> NonEmptyMap[Label, B]:
+    """Build a branch map; keys are derived from each branch's label."""
+    return NonEmptyMap.of_pairs((branch.label, branch) for branch in branches)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"branches"} type={"Iterable[B]"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.kernel.nonempty.NonEmptyMap[agentsparty.protocol.language.core.Label, agentsparty.protocol.language.core.B]"} />
+
+</PyFunction>
+<PyFunction name={"selection_codec"} type={"(branches) -> Codec[Chosen[BC]]"}>
+
+Schema and decoder for a structured alt over *branches* (one parse).
+
+<PySourceCode >
+
+```python
+def selection_codec(branches: NonEmptyMap[Label, BC]) -> Codec[Chosen[BC]]:
+    """Schema and decoder for a structured alt over *branches* (one parse)."""
+    by_name = {str(branch.label): branch for branch in branches.values()}
+    ordered = sorted(branches.values(), key=lambda b: b.label)
+
+    arms: list[dict[str, object]] = [
+        {
+            _TYPE_KEY: _OBJECT_TYPE,
+            'properties': {
+                _LABEL_KEY: {_TYPE_KEY: 'string', 'enum': [str(branch.label)]},
+                _PAYLOAD_KEY: dict(branch.payload.schema),
+            },
+            'required': [_LABEL_KEY, _PAYLOAD_KEY],
+            _ADDITIONAL_PROPERTIES_KEY: False,
+        }
+        for branch in ordered
+    ]
+    alt_schema: dict[str, object] = arms[0] if len(arms) == 1 else {'anyOf': arms}
+    schema = _schema(
+        {
+            _TYPE_KEY: _OBJECT_TYPE,
+            'properties': {_CHOICE_KEY: alt_schema},
+            'required': [_CHOICE_KEY],
+            _ADDITIONAL_PROPERTIES_KEY: False,
+        },
+    )
+
+    return Codec(
+        name=_CHOICE_KEY,
+        schema=schema,
+        decode=partial(_decode_selection, by_name),
+    )
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"branches"} type={"NonEmptyMap[Label, BC]"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Codec[agentsparty.protocol.language.core.Chosen[agentsparty.protocol.language.core.BC]]"} />
+
+</PyFunction>
+<PyFunction name={"seq"} type={"(first, *rest) -> Fragment[P]"}>
+
+Sequence *first* with *rest*, left to right.
+
+<PySourceCode >
+
+```python
+def seq(first: Fragment[P], *rest: Fragment[P]) -> Fragment[P]:
+    """Sequence *first* with *rest*, left to right.
+
+    Args:
+        first: The fragment to run first.
+        *rest: Fragments to run after, in order.
+    """
+    from operator import rshift
+
+    return reduce(rshift, rest, first)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"first"} type={"Fragment[P]"} value={undefined}>
+
+The fragment to run first.
+
+</PyParameter>
+<PyParameter name={"rest"} type={"Fragment[P]"} value={"()"} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Fragment[agentsparty.protocol.language.core.P]"} />
+
+</PyFunction>
+<PyFunction name={"repeat"} type={"(times, fragment) -> Fragment[P]"}>
+
+Unroll *fragment* a fixed number of times (finite, not recursive).
+
+For true unbounded loops use [`rec`](/docs/agentsparty/protocol/session) /
+[`var`](/docs/agentsparty/protocol/session) on session protocols.
+
+<PySourceCode >
+
+```python
+def repeat(times: int, fragment: Fragment[P]) -> Fragment[P]:
+    """Unroll *fragment* a fixed number of times (finite, not recursive).
+
+    For true unbounded loops use :func:`~agentsparty.protocol.session.rec` /
+    :func:`~agentsparty.protocol.session.var` on session protocols.
+    """
+    require_nonnegative('times', times)
+    if times == 0:
+        return Fragment.identity(fragment._end)
+    return seq(*(fragment for _ in range(times)))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"times"} type={"int"} value={null} />
+<PyParameter name={"fragment"} type={"Fragment[P]"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Fragment[agentsparty.protocol.language.core.P]"} />
+
+</PyFunction>
+
+</Tab>
+
+</Tabs>

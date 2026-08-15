@@ -1,0 +1,103 @@
+---
+title: types
+---
+
+The journal contract: what a recorded decision is and where it goes.
+
+<PyAttribute name={"DIGEST_LENGTH"} type={null} value={"16"}>
+
+Number of hexadecimal characters retained in a protocol digest.
+
+</PyAttribute>
+
+<PyAttribute name={"ROOT_TRACK"} type={"Track"} value={"Track(())"}>
+
+The track a session starts on: everything before the first parallel node.
+
+</PyAttribute>
+
+<PyAttribute name={"FIRST_STEP"} type={"StepIndex"} value={"StepIndex(ROOT_TRACK, 1)"}>
+
+The position of the first message on the root track.
+
+</PyAttribute>
+
+<PyAttribute name={"EMPTY_SCRIPT"} type={"Script"} value={"Script(MappingProxyType({}))"}>
+
+The script of a session that has not decided anything yet.
+
+</PyAttribute>
+
+<PyAttribute name={"NULL_JOURNAL"} type={"Journal"} value={"NoJournal()"}>
+
+The journal used when persistence is not switched on.
+
+</PyAttribute>
+
+<Tabs items={["Class","Functions"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"Track"} href={"/docs/agentsparty/journal/types/Track"} />
+<Card title={"StepIndex"} href={"/docs/agentsparty/journal/types/StepIndex"} />
+<Card title={"Digest"} href={"/docs/agentsparty/journal/types/Digest"} />
+<Card title={"SessionId"} href={"/docs/agentsparty/journal/types/SessionId"} />
+<Card title={"Decision"} href={"/docs/agentsparty/journal/types/Decision"} />
+<Card title={"Script"} href={"/docs/agentsparty/journal/types/Script"} />
+<Card title={"Journal"} href={"/docs/agentsparty/journal/types/Journal"} />
+<Card title={"NoJournal"} href={"/docs/agentsparty/journal/types/NoJournal"} />
+
+</Cards>
+
+</Tab>
+<Tab value={"Functions"}>
+
+<PyFunction name={"digest_of"} type={"(proto) -> Digest"}>
+
+Fingerprint *proto* by its canonical structural encoding.
+
+Two protocols share a digest exactly when they have the same roles, labels,
+branch structure, payload codec names, intents and deadlines. Arm and
+``Parallel`` branch order do not matter. A journal carries the digest of
+the protocol it was written under, so replaying it against a changed
+protocol fails at the boundary instead of decoding into the wrong session.
+
+<PySourceCode >
+
+```python
+def digest_of(proto: SessionType) -> Digest:
+    """Fingerprint *proto* by its canonical structural encoding.
+
+    Two protocols share a digest exactly when they have the same roles, labels,
+    branch structure, payload codec names, intents and deadlines. Arm and
+    ``Parallel`` branch order do not matter. A journal carries the digest of
+    the protocol it was written under, so replaying it against a changed
+    protocol fails at the boundary instead of decoding into the wrong session.
+
+    Args:
+        proto: The choreography to fingerprint.
+    """
+    return Digest(sha256(canonical_protocol(proto)).hexdigest()[:DIGEST_LENGTH])
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"proto"} type={"SessionType"} value={undefined}>
+
+The choreography to fingerprint.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.journal.types.Digest"} />
+
+</PyFunction>
+
+</Tab>
+
+</Tabs>

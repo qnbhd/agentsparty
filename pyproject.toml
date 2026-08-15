@@ -1,0 +1,330 @@
+[project]
+name = "agentsparty"
+# Single-sourced from `agentsparty.__version__` so the installed package and the
+# distribution metadata can never disagree; see [tool.hatch.version].
+dynamic = ["version"]
+description = "Declarative multiparty session protocols for AI agents"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Templin Konstantin" },
+]
+keywords = [
+    "session-types",
+    "mpst",
+    "choreography",
+    "protocol",
+    "agents",
+    "llm",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+dependencies = [
+    "typing-extensions>=4.16.0",
+]
+
+[project.optional-dependencies]
+openai = [
+    "openai>=2.48.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/qnbhd/agentsparty"
+Documentation = "https://qnbhd.github.io/agentsparty/"
+Repository = "https://github.com/qnbhd/agentsparty"
+Issues = "https://github.com/qnbhd/agentsparty/issues"
+Changelog = "https://github.com/qnbhd/agentsparty/blob/master/CHANGELOG.md"
+
+[build-system]
+# >=1.27 is the first release that understands the PEP 639 `license` expression
+# and `license-files` keys used above; older hatchling silently drops them.
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/agentsparty/__init__.py"
+
+# Both targets are allow-lists, never deny-lists: a deny-list has to be extended
+# every time the repo grows a new tool cache or agent config directory, and the
+# leak is only ever noticed after a release.
+[tool.hatch.build.targets.wheel]
+packages = ["src/agentsparty"]
+
+[tool.hatch.build.targets.sdist]
+# Enough to rebuild the wheel and read the project's terms — nothing else. The
+# test suite is deliberately absent: it is repo-coupled (it asserts over docs/,
+# examples/ and architecture/ guards), so a tarball copy of it could not pass.
+only-include = [
+    "src/agentsparty",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+]
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.164.0",
+    "openai>=2.48.0",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.0.0",
+    "pytest-xdist>=3.8.0",
+]
+docs = [
+    "griffe>=1.14.0",
+]
+lint = [
+    "codespell>=2.4.0",
+    "flake8>=7.3.0",
+    "import-linter>=2.13",
+    "pyright>=1.1.411",
+    "ruff>=0.16.1",
+    "ty>=0.0.65",
+    "typos>=1.32.0",
+    "wemake-python-styleguide>=1.7.1",
+]
+nox = [
+    "nox>=2026.7.11",
+    "nox-uv>=0.8.0",
+]
+pydantic = [
+    "pydantic>=2.12.5",
+]
+examples = [
+    "ddgs>=9.14.4",
+    "msgspec>=0.19",
+    "pydantic>=2.9",
+    "textual>=8.2.8",
+]
+mut = [
+    "mutmut>=3.7.0",
+]
+
+[tool.ruff]
+include = [
+  "src/**/*.py",
+  "tests/**/*.py",
+  "examples/**/*.py",
+  "docs/content/docs/**/*.mdx",
+]
+exclude = ["noxfile.py"]
+extend-exclude = ["docs/content/docs/(api)"]
+extension = { mdx = "markdown" }
+preview = true
+fix = true
+output-prefer-rule-codes = true
+line-length = 100
+
+[tool.ruff.format]
+quote-style = "single"
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
+  "A",     # flake8-builtins
+  "ASYNC", # flake8-async
+  "B",     # flake8-bugbear
+  "C4",    # flake8-comprehensions
+  "C90",   # mccabe
+  "COM",   # flake8-commas
+  "D",     # pydocstyle
+  "DTZ",   # flake8-datetimez
+  "DJ",    # flake8-django
+  "E",     # pycodestyle
+  "ERA",   # flake8-eradicate
+  "EXE",   # flake8-executable
+  "F",     # pyflakes
+  "FBT",   # flake8-boolean-trap
+  "FLY",   # pyflint
+  "FURB",  # refurb
+  "G",     # flake8-logging-format
+  "I",     # isort
+  "ICN",   # flake8-import-conventions
+  "INT",   # flake8-gettext
+  "ISC",   # flake8-implicit-str-concat
+  "LOG",   # flake8-logging
+  "N",     # pep8-naming
+  "PERF",  # perflint
+  "PIE",   # flake8-pie
+  "PL",    # pylint
+  "PT",    # flake8-pytest-style
+  "PTH",   # flake8-use-pathlib
+  "Q",     # flake8-quotes
+  "RET",   # flake8-return
+  "RSE",   # flake8-raise
+  "RUF",   # ruff
+  "S",     # flake8-bandit
+  "SIM",   # flake8-simplify
+  "SLF",   # flake8-self
+  "SLOT",  # flake8-slots
+  "T100",  # flake8-debugger
+  "TID",   # flake8-tidy-imports
+  "TRY",   # tryceratops
+  "UP",    # pyupgrade
+  "W",     # pycodestyle
+  "YTT",   # flake8-2020
+]
+ignore = [
+  "A005",     # allow to shadow stdlib and builtin module names
+  # Different doc rules that we don't really care about:
+  "D100",
+  "D104",
+  "D106",
+  "D203",
+  "D212",
+  "D401",
+  "D404",
+  "D405",
+  "D418",     # We should be able to add docstrings to `@overload` decorators
+  "D421",
+  "DJ008",    # we don't need `__str__` in models in tests
+  "ASYNC119", # `contextlib.aclosing` is not detected
+  "ISC001",   # implicit string concat conflicts with `ruff format`
+  "ISC003",   # prefer explicit string concat over implicit concat
+  "PLR09",    # we have our own complexity rules
+  "PLR2004",  # do not report magic numbers
+  "PLR6301",  # do not require classmethod / staticmethod when self not used
+  "PLC0414",  # do not raise on `as` re-exports
+  "PLW2901",  # allow to redefine iteration targets in for loops
+  "RUF029",   # we decide `async` functions based on API, not `await` usage
+  "RUF067",   # wps handles `__init__.py` logic better
+  "RUF105",   # keep old `# noqa` comments style, not `# ruff` comments
+  "RUF106",   # we prefer old error codes
+  "RUF201",   # keep old rule codes instead of verbose names
+  "TRY003",   # long exception messages from `tryceratops`
+
+  "N806",      # roles
+  "COM812",
+
+  "PLC0415",
+  "SLF001",
+
+]
+external = [ "WPS" ]
+# Plugin configs:
+flake8-quotes.inline-quotes = "single"
+mccabe.max-complexity = 6
+pydocstyle.convention = "google"
+flake8-gettext.extend-function-names = [ "_" ]
+
+[tool.ruff.lint.per-file-ignores]
+"!src/**.py" = ["D", "ANN"]
+"tests/**/*.py" = [ "S101", "SLF001", "PLC2701", "RUF012" ]
+# RUF001/RUF002: examples draw box glyphs and prompt ornaments for a reader.
+"examples/**/*.py" = [ "D1", "S1", "RUF001", "RUF002" ]
+
+[tool.ty.src]
+include = [
+    "src",
+    "tests",
+]
+
+[tool.pyright]
+include = ["examples", "src/agentsparty"]
+exclude = ["tests", "**/__pycache__"]
+typeCheckingMode = "standard"
+pythonVersion = "3.10"
+reportOperatorIssue = false
+
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests", "src/agentsparty"]
+asyncio_mode = "auto"
+doctest_optionflags = "ELLIPSIS NORMALIZE_WHITESPACE"
+addopts = [
+    "--doctest-modules",
+    "--doctest-glob=*.md",
+    "--cov=agentsparty",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+]
+
+
+[tool.mutmut]
+# The docs-guard tests resolve the generated Fumadocs source and README.md
+# relative to the test file, and hatchling needs README.md to build metadata.
+also_copy = [
+    "docs",
+    "examples",
+    "README.md",
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+]
+on_dependency_change = "rerun"
+# Static text guards (test_perimeter_lint) scan the source for exact tokens
+# (one cast, no isinstance, no dead symbols); in the mutants/ sandbox the files
+# legitimately contain every mutant inline, so these guards cannot hold there
+# and must be excluded from the mutation runs.
+pytest_add_cli_args_test_selection = ["--ignore=tests/architecture/test_perimeter.py"]
+
+
+
+[tool.coverage.run]
+source_pkgs = ["agentsparty"]
+branch = true
+
+[tool.coverage.paths]
+source = ["src/agentsparty", "*/site-packages/agentsparty"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+
+[tool.codespell]
+# Directory basenames are matched by codespell's walker; dot-dirs are also
+# skipped by its hidden-file logic. `docs/.next` and `docs/out` are build output.
+# `research` and third-party dumps are local-only; `unrs` is a Rust target tree;
+# research-analysis is paper notes with protocol role names (Ser, etc.).
+skip = "site,htmlcov,.venv,.nox,.git,.mypy_cache,.pytest_cache,.hypothesis,.ruff_cache,mutants/**,docs/node_modules/**,docs/.next/**,docs/out/**,docs/.source/**,docs/package-lock.json,docs/tsconfig.tsbuildinfo,*.lock,coverage.xml,coverage.json,research,unrs,agents-feature.md,models-features.md,streaming-feature.md,tasks-feature.md,architecture/research-analysis.md,architecture/plans"
+# Project vocabulary that codespell does not know.
+ignore-words-list = "parai,agentsparty,recv,disjointness,implementor,implementors,ser,thm,cor,streamd,modell,wit,re-declaring,corelate"
+
+[tool.typos.files]
+# typos respects .gitignore; `*.lock` is the generated uv lockfile.
+# Plans intentionally contain counterexample spellings and Russian math.
+extend-exclude = [
+    "*.lock",
+    "site/**",
+    "htmlcov/**",
+    "coverage.xml",
+    "coverage.json",
+    "architecture/plans/**",
+    "architecture/research-analysis.md",
+]
+
+[tool.typos.default.extend-words]
+# Academic abbreviations used in ADRs and docs.
+Thm = "Thm"
+Cor = "Cor"
+Def = "Def"
+Ser = "Ser"
+
+[tool.typos.default.extend-identifiers]
+# Intentional misspelling in tests asserting unknown signal names are rejected.
+streamd = "streamd"

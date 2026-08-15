@@ -1,0 +1,74 @@
+# Transcript (/docs/agentsparty/brief/Transcript)
+
+Brief that remembers every envelope; the default.
+
+## Attributes
+
+<PyAttribute name={"subject"} type={"Role"} value={null} />
+
+<PyAttribute name={"turns"} type={"tuple[Envelope, ...]"} value={"()"} />
+
+## Functions
+
+<PyFunction name={"remember"} type={"(self, envelope) -> Brief"}>
+
+The transcript with *envelope* appended.
+
+<PySourceCode >
+
+```python
+def remember(self, envelope: Envelope) -> Brief:
+    """The transcript with *envelope* appended.
+
+    Args:
+        envelope: A message this participant sent or received.
+    """
+    return Transcript(self.subject, (*self.turns, envelope))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"envelope"} type={"Envelope"} value={undefined}>
+
+A message this participant sent or received.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.brief.Brief"} />
+
+</PyFunction>
+
+<PyFunction name={"messages"} type={"(self) -> tuple[Message, ...]"}>
+
+Every remembered envelope, rendered oldest first.
+
+<PySourceCode >
+
+```python
+def messages(self) -> tuple[Message, ...]:
+    """Every remembered envelope, rendered oldest first."""
+    return tuple(line(self.subject, envelope) for envelope in self.turns)
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"tuple[agentsparty.llm.types.Message, ...]"} />
+
+</PyFunction>
+
+<PyFunction name={"__init__"} type={"(self, subject, turns=()) -> None"}>
+
+<div >
+
+<PyParameter name={"subject"} type={"Role"} value={null} />
+<PyParameter name={"turns"} type={"tuple[Envelope, ...]"} value={"()"} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

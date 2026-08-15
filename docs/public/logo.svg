@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500"
+     width="500" height="500" role="img" aria-label="agentsparty">
+  <rect width="500" height="500" rx="160" fill="#051f20" />
+  <!-- No webfont @import here: the mark is rendered through <img> and as a
+       favicon, contexts that fetch no external stylesheet, so the previous
+       Google Fonts import silently left the ampersand in a fallback face
+       anyway. The stack now names that fallback explicitly. -->
+  <text transform="translate(115.738722 147.395567) matrix(-1 0 0 -1 0 0)"
+        x="-133.04" y="-7.016" fill="#d7ff64" text-anchor="middle"
+        font-family="'EB Garamond', Garamond, Georgia, 'Times New Roman', serif"
+        font-size="300" font-weight="700">&amp;</text>
+</svg>

@@ -1,0 +1,124 @@
+# facet (/docs/agentsparty/tracing/facet/index)
+
+Which side of a session to watch: named subsets of the signal catalogue.
+
+A facet is a *set of signal names*, never a tag stored on an event. The
+``Signal`` union is closed and [`describe`](/docs/agentsparty/tracing/signals)
+covers it, so the catalogue below is finite — which is what makes ``~``
+always defined.
+
+What is deliberately absent: a ``custom`` facet. The industry needs one
+because its event set is open; agentsparty's is closed.
+
+<PyAttribute name={"SignalName"} type={"TypeAlias"} value={"Literal['session.started', 'session.finished', 'session.cancelled', 'session.unfolded', 'session.forked', 'step.started', 'step.selected', 'step.recalled', 'step.delivered', 'model.called', 'model.answered', 'model.streamed', 'model.corrected', 'tool.called', 'tool.answered', 'failed']"} />
+
+<PyAttribute name={"SIGNAL_NAMES"} type={"Final[frozenset[str]]"} value={"_SESSION | _STEP | _MODEL | _TOOL | _FAILURE"}>
+
+Every stable name [`describe`](/docs/agentsparty/tracing/signals) can produce.
+
+The five parts above partition it, so the named facets below cover it without
+overlap. ``tests/tracing/test_facet.py`` fails if a signal is added to
+[`signals`](/docs/agentsparty/tracing/signals) and not classified here.
+
+</PyAttribute>
+
+<PyAttribute name={"SESSION"} type={"Final"} value={"Facet(_SESSION)"}>
+
+The session's own life: started, finished, and each recursion unfolding.
+
+</PyAttribute>
+
+<PyAttribute name={"STEP"} type={"Final"} value={"Facet(_STEP)"}>
+
+One interaction node: offered, chosen or recalled, delivered.
+
+</PyAttribute>
+
+<PyAttribute name={"MODEL"} type={"Final"} value={"Facet(_MODEL)"}>
+
+Everything a language model did, including streamed fragments.
+
+</PyAttribute>
+
+<PyAttribute name={"TOOL"} type={"Final"} value={"Facet(_TOOL)"}>
+
+A toolbox running a tool and naming its reply branch.
+
+</PyAttribute>
+
+<PyAttribute name={"FAILURE"} type={"Final"} value={"Facet(_FAILURE)"}>
+
+A span whose body raised. Cross-cutting: any span can produce it.
+
+</PyAttribute>
+
+<PyAttribute name={"EVERYTHING"} type={"Final"} value={"Facet(SIGNAL_NAMES)"}>
+
+The facet watching every signal: the whole timeline.
+
+</PyAttribute>
+
+<PyAttribute name={"NOTHING"} type={"Final"} value={"Facet(frozenset())"}>
+
+The facet watching no signals; ``~EVERYTHING``.
+
+</PyAttribute>
+
+<Tabs items={["Class","Functions"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"Facet"} href={"/docs/agentsparty/tracing/facet/Facet"} />
+
+</Cards>
+
+</Tab>
+<Tab value={"Functions"}>
+
+<PyFunction name={"facet"} type={"(*names) -> Facet"}>
+
+The facet watching exactly *names*.
+
+For the sides that are not one of the named facets — a single signal,
+say::
+
+    tokens = facet('model.streamed')
+
+<PySourceCode >
+
+```python
+def facet(*names: SignalName) -> Facet:
+    """The facet watching exactly *names*.
+
+    For the sides that are not one of the named facets — a single signal,
+    say::
+
+        tokens = facet('model.streamed')
+
+    Args:
+        *names: Stable signal names, as produced by
+            :func:`~agentsparty.tracing.signals.describe`.
+
+    Raises:
+        ValueError: if a name is not in :data:`SIGNAL_NAMES`.
+    """
+    return Facet(frozenset(names))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"names"} type={"SignalName"} value={"()"} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.tracing.facet.Facet"} />
+
+</PyFunction>
+
+</Tab>
+
+</Tabs>

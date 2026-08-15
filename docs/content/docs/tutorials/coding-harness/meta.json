@@ -1,0 +1,9 @@
+{
+  "title": "Coding harness",
+  "pages": [
+    "start",
+    "declare-the-conversation",
+    "add-tools",
+    "bind-and-run"
+  ]
+}

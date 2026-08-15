@@ -1,0 +1,81 @@
+# SqliteTracer (/docs/agentsparty/tracing/sqlite/SqliteTracer)
+
+Tracer that appends one row per event to an ``events`` table.
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, connection) -> None"}>
+
+Create the table on *connection* if it is missing.
+
+The caller owns the connection: opening, closing and any pragmas
+(``journal_mode=WAL`` is a good idea) are outside this tracer.
+
+<PySourceCode >
+
+```python
+def __init__(self, connection: sqlite3.Connection) -> None:
+    """Create the table on *connection* if it is missing.
+
+    The caller owns the connection: opening, closing and any pragmas
+    (``journal_mode=WAL`` is a good idea) are outside this tracer.
+
+    Args:
+        connection: An open SQLite connection owned by the caller.
+    """
+    self._connection = connection
+    connection.execute(SCHEMA)
+    connection.commit()
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"connection"} type={"sqlite3.Connection"} value={undefined}>
+
+An open SQLite connection owned by the caller.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"record"} type={"(self, event) -> None"}>
+
+Insert *event* as one row and commit.
+
+<PySourceCode >
+
+```python
+def record(self, event: Event) -> None:
+    """Insert *event* as one row and commit.
+
+    Args:
+        event: The event to store.
+    """
+    self._connection.execute(
+        'INSERT INTO events (seq, span, parent, name, fields) VALUES (?, ?, ?, ?, ?)',
+        _event_row(event),
+    )
+    self._connection.commit()
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"event"} type={"Event"} value={undefined}>
+
+The event to store.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

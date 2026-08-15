@@ -1,0 +1,21 @@
+# Digest (/docs/agentsparty/journal/types/Digest)
+
+Fingerprint of the protocol a journal belongs to.
+
+## Attributes
+
+<PyAttribute name={"value"} type={"str"} value={null} />
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, value) -> None"}>
+
+<div >
+
+<PyParameter name={"value"} type={"str"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

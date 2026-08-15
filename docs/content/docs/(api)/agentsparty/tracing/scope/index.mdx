@@ -1,0 +1,138 @@
+---
+title: scope
+---
+
+Where events are recorded from: span identity and the ambient scope.
+
+<PyAttribute name={"SPAN_ID_LENGTH"} type={null} value={"12"}>
+
+Number of hexadecimal characters used by the UUID span-id source.
+
+</PyAttribute>
+
+<PyAttribute name={"NULL_SCOPE"} type={"Scope"} value={"new_scope(NULL_TRACER)"}>
+
+The scope in force outside a traced session; discards everything.
+
+</PyAttribute>
+
+<Tabs items={["Class","Functions"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"Scope"} href={"/docs/agentsparty/tracing/scope/Scope"} />
+
+</Cards>
+
+</Tab>
+<Tab value={"Functions"}>
+
+<PyFunction name={"uuid_ids"} type={"() -> Iterator[SpanId]"}>
+
+Endless globally unique span ids; the production default.
+
+<PySourceCode >
+
+```python
+def uuid_ids() -> Iterator[SpanId]:
+    """Endless globally unique span ids; the production default."""
+    return (SpanId(uuid4().hex[:SPAN_ID_LENGTH]) for _ in count())
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"collections.abc.Iterator[agentsparty.tracing.types.SpanId]"} />
+
+</PyFunction>
+<PyFunction name={"counting_ids"} type={"(prefix='s') -> Iterator[SpanId]"}>
+
+Endless deterministic span ids (``s1``, ``s2``, …) for tests and docs.
+
+<PySourceCode >
+
+```python
+def counting_ids(prefix: str = 's') -> Iterator[SpanId]:
+    """Endless deterministic span ids (``s1``, ``s2``, …) for tests and docs.
+
+    Args:
+        prefix: The text placed before the counter.
+    """
+    return (SpanId(f'{prefix}{number}') for number in count(1))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"prefix"} type={"str"} value={"'s'"}>
+
+The text placed before the counter.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"collections.abc.Iterator[agentsparty.tracing.types.SpanId]"} />
+
+</PyFunction>
+<PyFunction name={"new_scope"} type={"(tracer, ids=None) -> Scope"}>
+
+A fresh root scope over *tracer*.
+
+<PySourceCode >
+
+```python
+def new_scope(tracer: Tracer, ids: Iterator[SpanId] | None = None) -> Scope:
+    """A fresh root scope over *tracer*.
+
+    Args:
+        tracer: Where the recorded events go.
+        ids: Span-id source; :func:`uuid_ids` when omitted.
+    """
+    factory = uuid_ids() if ids is None else ids
+    return Scope(tracer, Span(next(factory), None), factory, count(1))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"tracer"} type={"Tracer"} value={undefined}>
+
+Where the recorded events go.
+
+</PyParameter>
+<PyParameter name={"ids"} type={"Iterator[SpanId] | None"} value={"None"}>
+
+Span-id source; `uuid_ids` when omitted.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.tracing.scope.Scope"} />
+
+</PyFunction>
+<PyFunction name={"current"} type={"() -> Scope"}>
+
+The innermost open scope, or `NULL_SCOPE` outside a session.
+
+<PySourceCode >
+
+```python
+def current() -> Scope:
+    """The innermost open scope, or :data:`NULL_SCOPE` outside a session."""
+    return _CURRENT.get()
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"agentsparty.tracing.scope.Scope"} />
+
+</PyFunction>
+
+</Tab>
+
+</Tabs>

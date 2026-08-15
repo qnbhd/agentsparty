@@ -1,0 +1,246 @@
+---
+title: Cast
+---
+
+A partial section of projection: roles bound to factories over endpoints.
+
+The protocol is stated once. Each `play` extends the section for one
+role; `runtime` / `run` demand totality and name any unplayed
+roles. Immutable: `play` returns a new `Cast`.
+
+## Attributes
+
+<PyAttribute name={"proto"} type={"GlobalType"} value={null}>
+
+The closed choreography this cast binds.
+
+</PyAttribute>
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, proto, _players=()) -> None"}>
+
+Close *proto* if needed, validate it, and start an empty cast.
+
+<PySourceCode >
+
+```python
+def __init__(
+    self,
+    proto: SessionType | Fragment[SessionType],
+    _players: tuple[Participant, ...] = (),
+) -> None:
+    """Close *proto* if needed, validate it, and start an empty cast.
+
+    Args:
+        proto: The choreography (or fragment) every player will share.
+        _players: Already-bound participants (internal; used by :meth:`play`).
+    """
+    closed = ensure_session(proto)
+    assert_wellformed(closed)
+    self._proto = as_global(closed)
+    self._players = _players
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"proto"} type={"SessionType | Fragment[SessionType]"} value={undefined}>
+
+The choreography (or fragment) every player will share.
+
+</PyParameter>
+<PyParameter name={"_players"} type={"tuple[Participant, ...]"} value={"()"}>
+
+Already-bound participants (internal; used by `play`).
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"play"} type={"(self, role, casting) -> Cast"}>
+
+Bind *role* by applying *casting* to its projected endpoint.
+
+<PySourceCode >
+
+```python
+def play(self, role: Role, casting: Casting) -> Cast:
+    """Bind *role* by applying *casting* to its projected endpoint.
+
+    Args:
+        role: A role of :attr:`proto`.
+        casting: Factory ``(role, endpoint) -> participant``.
+
+    Returns:
+        A new cast that also includes this player.
+
+    Raises:
+        ValueError: if *role* is not in the protocol or is already played.
+    """
+    required = {r.name for r in participants(self._proto)}
+    if role.name not in required:
+        required_names = _NAMES_SEPARATOR.join(sorted(required))
+        raise ValueError(
+            f'role {role.name!r} is not in the protocol; required: {required_names}',
+        )
+    if any(player.role.name == role.name for player in self._players):
+        raise ValueError(f'role {role.name!r} is already cast')
+    endpoint = project(self._proto, role)
+    participant = casting(role, endpoint)
+    return Cast(self._proto, (*self._players, participant))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"role"} type={"Role"} value={undefined}>
+
+A role of `proto`.
+
+</PyParameter>
+<PyParameter name={"casting"} type={"Casting"} value={undefined}>
+
+Factory ``(role, endpoint) -> participant``.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.runtime.Cast"}>
+
+A new cast that also includes this player.
+
+</PyFunctionReturn>
+
+</PyFunction>
+
+<PyFunction name={"runtime"} type={"(self, *, allowance=DEFAULT_ALLOWANCE, tracer=NULL_TRACER, journal=NULL_JOURNAL) -> AgentRuntime"}>
+
+Build an `AgentRuntime` when every role is cast.
+
+<PySourceCode >
+
+```python
+def runtime(
+    self,
+    *,
+    allowance: Allowance = DEFAULT_ALLOWANCE,
+    tracer: Tracer = NULL_TRACER,
+    journal: Journal = NULL_JOURNAL,
+) -> AgentRuntime:
+    """Build an :class:`AgentRuntime` when every role is cast.
+
+    Raises:
+        ValueError: if any protocol role is still unplayed (named).
+    """
+    required = {r.name for r in participants(self._proto)}
+    present = {player.role.name for player in self._players}
+    missing = sorted(required - present)
+    if missing:
+        missing_names = _NAMES_SEPARATOR.join(missing)
+        required_names = _NAMES_SEPARATOR.join(sorted(required))
+        raise ValueError(
+            f'missing participants for roles: {missing_names}. '
+            f'The protocol requires: {required_names}',
+        )
+    return AgentRuntime(
+        self._proto,
+        self._players,
+        allowance=allowance,
+        tracer=tracer,
+        journal=journal,
+    )
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"allowance"} type={"Allowance"} value={"DEFAULT_ALLOWANCE"} />
+<PyParameter name={"tracer"} type={"Tracer"} value={"NULL_TRACER"} />
+<PyParameter name={"journal"} type={"Journal"} value={"NULL_JOURNAL"} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.runtime.AgentRuntime"} />
+
+</PyFunction>
+
+<PyFunction name={"run"} type={"(self, *, allowance=DEFAULT_ALLOWANCE, tracer=NULL_TRACER, journal=NULL_JOURNAL) -> list[Envelope]"}>
+
+Totality then `run`.
+
+<PySourceCode >
+
+```python
+async def run(
+    self,
+    *,
+    allowance: Allowance = DEFAULT_ALLOWANCE,
+    tracer: Tracer = NULL_TRACER,
+    journal: Journal = NULL_JOURNAL,
+) -> list[Envelope]:
+    """Totality then :meth:`AgentRuntime.run`."""
+    return await self.runtime(
+        allowance=allowance,
+        tracer=tracer,
+        journal=journal,
+    ).run()
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"allowance"} type={"Allowance"} value={"DEFAULT_ALLOWANCE"} />
+<PyParameter name={"tracer"} type={"Tracer"} value={"NULL_TRACER"} />
+<PyParameter name={"journal"} type={"Journal"} value={"NULL_JOURNAL"} />
+
+</div>
+
+<PyFunctionReturn type={"list[agentsparty.participant.Envelope]"} />
+
+</PyFunction>
+
+<PyFunction name={"run_sync"} type={"(self, *, allowance=DEFAULT_ALLOWANCE, tracer=NULL_TRACER, journal=NULL_JOURNAL) -> list[Envelope]"}>
+
+Totality then `run_sync`.
+
+<PySourceCode >
+
+```python
+def run_sync(
+    self,
+    *,
+    allowance: Allowance = DEFAULT_ALLOWANCE,
+    tracer: Tracer = NULL_TRACER,
+    journal: Journal = NULL_JOURNAL,
+) -> list[Envelope]:
+    """Totality then :meth:`AgentRuntime.run_sync`."""
+    return self.runtime(
+        allowance=allowance,
+        tracer=tracer,
+        journal=journal,
+    ).run_sync()
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"allowance"} type={"Allowance"} value={"DEFAULT_ALLOWANCE"} />
+<PyParameter name={"tracer"} type={"Tracer"} value={"NULL_TRACER"} />
+<PyParameter name={"journal"} type={"Journal"} value={"NULL_JOURNAL"} />
+
+</div>
+
+<PyFunctionReturn type={"list[agentsparty.participant.Envelope]"} />
+
+</PyFunction>

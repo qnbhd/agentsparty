@@ -1,0 +1,94 @@
+---
+title: agent
+---
+
+LLM-driven participant: fills typed payloads and picks declared branches.
+
+<PyAttribute name={"NO_REPAIR"} type={"Final"} value={"Repair(0)"} />
+
+<PyAttribute name={"DEFAULT_REPAIR"} type={"Final"} value={"Repair(1)"} />
+
+<Tabs items={["Class","Functions"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"Repair"} href={"/docs/agentsparty/agent/Repair"} />
+<Card title={"Agent"} href={"/docs/agentsparty/agent/Agent"} />
+
+</Cards>
+
+</Tab>
+<Tab value={"Functions"}>
+
+<PyFunction name={"agent"} type={"(model, instructions, *, effort='low', brief=None, repair=DEFAULT_REPAIR) -> Callable[[Role, EndpointType], Participant]"}>
+
+Casting factory: bind *model* and *instructions* when a role is played.
+
+Returns a ``(role, endpoint) -> Agent`` for [`play`](/docs/agentsparty/runtime/Cast).
+
+<PySourceCode >
+
+```python
+def agent(
+    model: LanguageModel,
+    instructions: str,
+    *,
+    effort: Effort = 'low',
+    brief: Brief | None = None,
+    repair: Repair = DEFAULT_REPAIR,
+) -> Callable[[Role, EndpointType], Participant]:
+    """Casting factory: bind *model* and *instructions* when a role is played.
+
+    Returns a ``(role, endpoint) -> Agent`` for :meth:`~agentsparty.runtime.Cast.play`.
+
+    Args:
+        model: The language model that fills payloads and picks branches.
+        instructions: System prompt describing how the agent must behave.
+        effort: Reasoning effort passed to the model on every call.
+        brief: Initial memory; defaults to an empty transcript for the role.
+        repair: How many corrections the model is offered on a bad answer.
+    """
+    return partial(_bind_agent, model, instructions, effort, brief, repair)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"model"} type={"LanguageModel"} value={undefined}>
+
+The language model that fills payloads and picks branches.
+
+</PyParameter>
+<PyParameter name={"instructions"} type={"str"} value={undefined}>
+
+System prompt describing how the agent must behave.
+
+</PyParameter>
+<PyParameter name={"effort"} type={"Effort"} value={"'low'"}>
+
+Reasoning effort passed to the model on every call.
+
+</PyParameter>
+<PyParameter name={"brief"} type={"Brief | None"} value={"None"}>
+
+Initial memory; defaults to an empty transcript for the role.
+
+</PyParameter>
+<PyParameter name={"repair"} type={"Repair"} value={"DEFAULT_REPAIR"}>
+
+How many corrections the model is offered on a bad answer.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"collections.abc.Callable[[agentsparty.kernel.role.Role, agentsparty.protocol.EndpointType], agentsparty.participant.Participant]"} />
+
+</PyFunction>
+
+</Tab>
+
+</Tabs>

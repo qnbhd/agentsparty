@@ -1,0 +1,22 @@
+# debug (/docs/agentsparty/debug/index)
+
+Human-readable sections of a session, written to a `Console`.
+
+This module prints; it does not decide anything.  It is the printing twin of
+``agentsparty.tracing``, which is the machine-readable one.  Nothing inside
+``agentsparty`` imports it: a library that prints from its own guts is a library
+you cannot embed.
+
+<Tabs items={["Class"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"Report"} href={"/docs/agentsparty/debug/Report"} />
+
+</Cards>
+
+</Tab>
+
+</Tabs>

@@ -1,0 +1,17 @@
+# memory (/docs/agentsparty/journal/memory/index)
+
+In-memory journal for tests, doctests and forking a script by hand.
+
+<Tabs items={["Class"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"MemoryJournal"} href={"/docs/agentsparty/journal/memory/MemoryJournal"} />
+
+</Cards>
+
+</Tab>
+
+</Tabs>

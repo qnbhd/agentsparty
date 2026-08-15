@@ -1,0 +1,81 @@
+---
+title: role
+---
+
+Roles: named endpoints that participants bind to in a protocol.
+
+<Tabs items={["Class","Functions"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"Role"} href={"/docs/agentsparty/kernel/role/Role"} />
+
+</Cards>
+
+</Tab>
+<Tab value={"Functions"}>
+
+<PyFunction name={"role"} type={"(name) -> Role"}>
+
+Build a single `Role`.
+
+<PySourceCode >
+
+```python
+def role(name: str) -> Role:
+    """Build a single :class:`Role`.
+
+    Args:
+        name: The role's name.
+    """
+    return Role(name)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"name"} type={"str"} value={undefined}>
+
+The role's name.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.kernel.role.Role"} />
+
+</PyFunction>
+<PyFunction name={"roles"} type={"(*names) -> tuple[Role, ...]"}>
+
+Build several `Role` objects, one per *name*.
+
+<PySourceCode >
+
+```python
+def roles(*names: str) -> tuple[Role, ...]:
+    """Build several :class:`Role` objects, one per *name*.
+
+    Args:
+        *names: Role names, in the order they appear in a protocol.
+    """
+    return tuple(Role(name) for name in names)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"names"} type={"str"} value={"()"} />
+
+</div>
+
+<PyFunctionReturn type={"tuple[agentsparty.kernel.role.Role, ...]"} />
+
+</PyFunction>
+
+</Tab>
+
+</Tabs>

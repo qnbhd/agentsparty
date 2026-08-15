@@ -1,0 +1,134 @@
+# Profile (/docs/agentsparty/llm/profile/Profile)
+
+The reasoning efforts a model serves.
+
+[`EFFORTS`](/docs/agentsparty/llm/types) is a chain — a total order from ``none``
+to ``high`` — and a profile names a subset of it. `floor` retracts
+any requested effort onto that subset by taking the greatest served effort
+that does not exceed it, so a request is **never** upgraded to something
+more expensive than what was asked for.
+
+Requiring [`LEAST_EFFORT`](/docs/agentsparty/llm/types) to be served is what
+makes the retraction total: there is always something to fall back to, so
+no caller ever has to check whether adaptation succeeded. This is the whole
+of what the industry spends a dictionary of capability flags on.
+
+## Attributes
+
+<PyAttribute name={"efforts"} type={"frozenset[Effort]"} value={null} />
+
+## Functions
+
+<PyFunction name={"of"} type={"(cls, *extra) -> Profile"}>
+
+Build a profile that always serves the least effort.
+
+<PySourceCode >
+
+```python
+@classmethod
+def of(cls, *extra: Effort) -> Profile:
+    """Build a profile that always serves the least effort."""
+    return cls(frozenset((LEAST_EFFORT, *extra)))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"cls"} type={null} value={null} />
+<PyParameter name={"extra"} type={"Effort"} value={"()"} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.llm.profile.Profile"} />
+
+</PyFunction>
+
+<PyFunction name={"floor"} type={"(self, effort) -> Effort"}>
+
+The greatest served effort that does not exceed *effort*.
+
+<PySourceCode >
+
+```python
+def floor(self, effort: Effort) -> Effort:
+    """The greatest served effort that does not exceed *effort*.
+
+    Args:
+        effort: The effort that was asked for.
+
+    Returns:
+        The effort that will actually be sent.
+    """
+    wanted = EFFORTS[: EFFORTS.index(effort) + 1]
+    # total by construction: LEAST_EFFORT is served and heads every slice.
+    return next(e for e in reversed(wanted) if e in self.efforts)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"effort"} type={"Effort"} value={undefined}>
+
+The effort that was asked for.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.llm.types.Effort"}>
+
+The effort that will actually be sent.
+
+</PyFunctionReturn>
+
+</PyFunction>
+
+<PyFunction name={"adapt"} type={"(self, request) -> StructuredRequest"}>
+
+*request* with its effort retracted onto what this profile serves.
+
+<PySourceCode >
+
+```python
+def adapt(self, request: StructuredRequest) -> StructuredRequest:
+    """*request* with its effort retracted onto what this profile serves.
+
+    Args:
+        request: The turn about to be sent.
+    """
+    served = self.floor(request.effort)
+    if served == request.effort:
+        return request
+    return replace(request, effort=served)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"request"} type={"StructuredRequest"} value={undefined}>
+
+The turn about to be sent.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.llm.types.StructuredRequest"} />
+
+</PyFunction>
+
+<PyFunction name={"__init__"} type={"(self, efforts) -> None"}>
+
+<div >
+
+<PyParameter name={"efforts"} type={"frozenset[Effort]"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

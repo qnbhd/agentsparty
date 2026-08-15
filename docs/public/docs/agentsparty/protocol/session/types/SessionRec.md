@@ -1,0 +1,24 @@
+# SessionRec (/docs/agentsparty/protocol/session/types/SessionRec)
+
+A recursive session protocol ``μ name.body``.
+
+## Attributes
+
+<PyAttribute name={"name"} type={"str"} value={null} />
+
+<PyAttribute name={"body"} type={"SessionType"} value={null} />
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, name, body) -> None"}>
+
+<div >
+
+<PyParameter name={"name"} type={"str"} value={null} />
+<PyParameter name={"body"} type={"SessionType"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

@@ -1,0 +1,67 @@
+# Journal (/docs/agentsparty/journal/types/Journal)
+
+Durable, append-only record of the decisions a session made.
+
+## Functions
+
+<PyFunction name={"script"} type={"(self) -> Script"}>
+
+Everything decided so far, in step order.
+
+<PySourceCode >
+
+```python
+def script(self) -> Script:
+    """Everything decided so far, in step order."""
+    ...
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"agentsparty.journal.types.Script"} />
+
+</PyFunction>
+
+<PyFunction name={"append"} type={"(self, decision) -> None"}>
+
+Record *decision* durably.
+
+Called before the message is delivered, so a crash during delivery
+cannot lose an answer that was already paid for. Unlike
+[`record`](/docs/agentsparty/tracing/types/Tracer), ``append`` may not drop:
+a decision that is not durable is a decision the session cannot
+recover.
+
+<PySourceCode >
+
+```python
+def append(self, decision: Decision) -> None:
+    """Record *decision* durably.
+
+    Called before the message is delivered, so a crash during delivery
+    cannot lose an answer that was already paid for. Unlike
+    :meth:`~agentsparty.tracing.types.Tracer.record`, ``append`` may not drop:
+    a decision that is not durable is a decision the session cannot
+    recover.
+
+    Args:
+        decision: The alt to record.
+    """
+    ...
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"decision"} type={"Decision"} value={undefined}>
+
+The alt to record.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

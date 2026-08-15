@@ -1,0 +1,23 @@
+---
+title: Located
+---
+
+Opaque value located at a receiver.
+
+In v1 this exists for (1) guarding ordinary ``if`` via `__bool__`,
+(2) readability, and (3) a door for later local computation. There are
+**no** consumption operators in v1 — that is intentional, not unfinished.
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, _receiver=None) -> None"}>
+
+<div >
+
+<PyParameter name={"_receiver"} type={"Role | None"} value={"None"} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

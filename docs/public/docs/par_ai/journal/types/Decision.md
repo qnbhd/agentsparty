@@ -1,0 +1,119 @@
+# Decision (/docs/agentsparty/journal/types/Decision)
+
+One authored alt: the only fact a session cannot recompute.
+
+The roles, the label and the codec name are implied by the protocol and
+the steps before this one; they are recorded anyway, as a checksum against
+an edited or foreign journal, and so the file reads on its own.
+
+## Attributes
+
+<PyAttribute name={"step"} type={"StepIndex"} value={null} />
+
+<PyAttribute name={"sender"} type={"Role"} value={null} />
+
+<PyAttribute name={"receiver"} type={"Role"} value={null} />
+
+<PyAttribute name={"label"} type={"Label"} value={null} />
+
+<PyAttribute name={"codec"} type={"str"} value={null} />
+
+<PyAttribute name={"raw"} type={"RawValue"} value={null} />
+
+## Functions
+
+<PyFunction name={"branch_in"} type={"(self, sender, receiver, branches) -> BC"}>
+
+The branch this decision names at the node reached at its step.
+
+<PySourceCode >
+
+```python
+def branch_in(
+    self,
+    sender: Role,
+    receiver: Role,
+    branches: Mapping[Label, BC],
+) -> BC:
+    """The branch this decision names at the node reached at its step.
+
+    Args:
+        sender: The sender of the interaction reached at this step.
+        receiver: The receiver of that interaction.
+        branches: The labelled alternatives that interaction offers.
+
+    Returns:
+        The recorded branch.
+
+    Raises:
+        JournalError: if the recorded roles, label or codec do not fit that
+            node — the journal was edited, or belongs to another protocol.
+    """
+    where = _step_where(self.step)
+    if (sender, receiver) != (self.sender, self.receiver):
+        recorded = _role_pair(self.sender, self.receiver)
+        actual = _role_pair(sender, receiver)
+        raise JournalError(
+            f'step {where} was recorded as {recorded}, but the protocol reaches {actual} there',
+        )
+    if self.label not in branches:
+        raise JournalError(
+            f'step {where} recorded label {self.label}, '
+            f'but the protocol offers: {_offered_labels(branches)}',
+        )
+    branch = branches[self.label]
+    if self.codec != branch.payload.name:
+        payload_name = branch.payload.name
+        raise JournalError(
+            f'step {where} recorded codec {self.codec!r}, but the '
+            f'protocol offers {payload_name!r} there',
+        )
+    return branch
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"sender"} type={"Role"} value={undefined}>
+
+The sender of the interaction reached at this step.
+
+</PyParameter>
+<PyParameter name={"receiver"} type={"Role"} value={undefined}>
+
+The receiver of that interaction.
+
+</PyParameter>
+<PyParameter name={"branches"} type={"Mapping[Label, BC]"} value={undefined}>
+
+The labelled alternatives that interaction offers.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.journal.types.BC"}>
+
+The recorded branch.
+
+</PyFunctionReturn>
+
+</PyFunction>
+
+<PyFunction name={"__init__"} type={"(self, step, sender, receiver, label, codec, raw) -> None"}>
+
+<div >
+
+<PyParameter name={"step"} type={"StepIndex"} value={null} />
+<PyParameter name={"sender"} type={"Role"} value={null} />
+<PyParameter name={"receiver"} type={"Role"} value={null} />
+<PyParameter name={"label"} type={"Label"} value={null} />
+<PyParameter name={"codec"} type={"str"} value={null} />
+<PyParameter name={"raw"} type={"RawValue"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

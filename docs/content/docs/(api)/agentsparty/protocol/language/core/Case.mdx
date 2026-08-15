@@ -1,0 +1,89 @@
+---
+title: Case
+---
+
+One labelled alternative, shared by the global and local DSLs.
+
+## Attributes
+
+<PyAttribute name={"label"} type={"Label"} value={null} />
+
+<PyAttribute name={"payload"} type={"Codec[Any]"} value={"Nothing"} />
+
+<PyAttribute name={"body"} type={"Fragment[P] | None"} value={"None"} />
+
+<PyAttribute name={"intent"} type={"str"} value={"''"} />
+
+<PyAttribute name={"within"} type={"Deadline | None"} value={"None"} />
+
+## Functions
+
+<PyFunction name={"then"} type={"(self, first, *rest) -> Case[P]"}>
+
+This case followed by *first* and *rest*, in order.
+
+Equivalent to ``self >> first >> ...``, but the call brackets delimit
+the branch: in a multi-arm `alt`, the
+steps of a long arm are indented under their label instead of lining up
+with the next arm, which reads as one arm per parenthesised block.
+
+<PySourceCode >
+
+```python
+def then(self, first: Fragment[P], *rest: Fragment[P]) -> Case[P]:
+    """This case followed by *first* and *rest*, in order.
+
+    Equivalent to ``self >> first >> ...``, but the call brackets delimit
+    the branch: in a multi-arm :func:`~agentsparty.protocol.session.alt`, the
+    steps of a long arm are indented under their label instead of lining up
+    with the next arm, which reads as one arm per parenthesised block.
+
+    Args:
+        first: The step that follows this case's label.
+        *rest: Further steps, in the order they happen.
+
+    Returns:
+        This case with the steps appended to its body.
+    """
+    composed = seq(first, *rest)
+    attached = self >> composed
+    post(expr=attached.body is not None, message='then must attach a continuation')
+    return attached
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"first"} type={"Fragment[P]"} value={undefined}>
+
+The step that follows this case's label.
+
+</PyParameter>
+<PyParameter name={"rest"} type={"Fragment[P]"} value={"()"} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Case"}>
+
+This case with the steps appended to its body.
+
+</PyFunctionReturn>
+
+</PyFunction>
+
+<PyFunction name={"__init__"} type={"(self, label, payload=Nothing, body=None, intent='', within=None) -> None"}>
+
+<div >
+
+<PyParameter name={"label"} type={"Label"} value={null} />
+<PyParameter name={"payload"} type={"Codec[Any]"} value={"Nothing"} />
+<PyParameter name={"body"} type={"Fragment[P] | None"} value={"None"} />
+<PyParameter name={"intent"} type={"str"} value={"''"} />
+<PyParameter name={"within"} type={"Deadline | None"} value={"None"} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

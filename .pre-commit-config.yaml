@@ -1,0 +1,53 @@
+# Fast pre-commit checks — deliberately NOT tied to nox and not the test matrix.
+# Runs before every commit: ruff (format + lint, auto-fixing), import-linter,
+# and ty (type check).
+# Pyright stays in nox/CI — it is too slow for the pre-commit path.
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.1
+    hooks:
+      - id: ruff-format
+        files: ^(src|tests|examples)/.*\.py$
+      - id: ruff-check
+        args: [--fix]
+        files: ^(src|tests|examples)/.*\.py$
+
+  # ty-pre-commit switched to `uv check` (v0.0.50+), which requires a newer uv
+  # than the one in this repo. Run ty in the project env via uv instead — the
+  # same command as nox's typecheck, so it sees all project dependencies.
+  # Requires a synced env (`uv sync --all-groups`, done by `just install`).
+  - repo: local
+    hooks:
+      - id: ruff-format-docs
+        name: ruff-format (docs, 80 columns)
+        entry: uv run ruff format --line-length 80 --force-exclude
+        language: system
+        files: ^docs/content/docs/(?!\(api\)/).*\.mdx$
+        require_serial: true
+
+      - id: import-linter
+        name: import-linter
+        entry: uv run --group lint lint-imports
+        language: system
+        pass_filenames: false
+        always_run: true
+        require_serial: true
+
+      - id: flake8-wps
+        name: flake8 (WPS)
+        entry: uv run flake8 src --select WPS
+        language: system
+        pass_filenames: false
+        always_run: true
+        require_serial: true
+
+      - id: ty
+        name: ty
+        description: Run 'ty' for extremely fast Python type checking
+        entry: uv run ty check examples src/agentsparty tests
+        language: system
+        types_or: [python, pyi, jupyter]
+        pass_filenames: false
+        always_run: true
+        require_serial: true

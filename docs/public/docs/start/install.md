@@ -1,0 +1,45 @@
+# Install (/docs/start/install)
+
+## Core package
+
+```bash
+# Install the core package.
+pip install agentsparty
+```
+
+Requires **Python 3.10+**. Core has no provider dependency.
+
+## OpenAI-compatible backend
+
+```bash
+# Install the optional OpenAI-compatible backend.
+pip install 'agentsparty[openai]'
+```
+
+Needs `OPENAI_API_KEY` at run time.
+
+## Development checkout
+
+```bash
+# Fetch the repository and install its development dependencies.
+git clone https://github.com/qnbhd/agentsparty.git
+cd agentsparty
+uv sync --all-groups
+# Run the test suite after installation.
+uv run pytest -q
+```
+
+## Verify import
+
+```python exec
+import agentsparty
+from agentsparty.runtime import Cast
+from agentsparty.protocol import msg
+
+# Import a public runtime type and a protocol constructor as a smoke test.
+assert Cast is not None and msg is not None
+print('agentsparty import ok')
+```
+
+Next: [Quickstart](/docs/start/quickstart).
+

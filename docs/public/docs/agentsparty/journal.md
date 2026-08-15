@@ -1,0 +1,31 @@
+# journal (/docs/agentsparty/journal/index)
+
+Persistence for protocol sessions: the decisions a session cannot recompute.
+
+A journal records one decision per delivered message — the label a participant
+picked and the raw payload it authored. Everything else about a session is a
+function of the protocol and that journal, so resuming is a replay, not a
+restore.
+
+``SqliteJournal`` is deliberately not re-exported — same reasoning as
+``agentsparty.tracing`` not re-exporting ``SqliteTracer``: a sink that touches a
+database stays an explicit import::
+
+    from agentsparty.journal.sqlite import SqliteJournal
+
+<Tabs items={["Modules"]}>
+
+<Tab value={"Modules"}>
+
+<Cards >
+
+<Card href={"/docs/agentsparty/journal/sqlite"} title={"sqlite"} />
+<Card href={"/docs/agentsparty/journal/memory"} title={"memory"} />
+<Card href={"/docs/agentsparty/journal/types"} title={"types"} />
+<Card href={"/docs/agentsparty/journal/jsonl"} title={"jsonl"} />
+
+</Cards>
+
+</Tab>
+
+</Tabs>
