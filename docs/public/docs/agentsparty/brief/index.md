@@ -1,0 +1,79 @@
+# brief (/docs/agentsparty/brief/index)
+
+What a participant remembers of a session, and what a model is shown of it.
+
+<Tabs items={["Class","Functions"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"Brief"} href={"/docs/agentsparty/brief/Brief"} />
+<Card title={"Transcript"} href={"/docs/agentsparty/brief/Transcript"} />
+<Card title={"Recent"} href={"/docs/agentsparty/brief/Recent"} />
+
+</Cards>
+
+</Tab>
+<Tab value={"Functions"}>
+
+<PyFunction name={"line"} type={"(subject, envelope) -> Message"}>
+
+Render *envelope* from *subject*'s side of the exchange.
+
+A message this participant sent is rendered as ``assistant``; anything else
+as ``user``. The rendering is the same on a live run and on a replay — that
+equality is what makes a resumed session faithful.
+
+<PySourceCode >
+
+```python
+def line(subject: Role, envelope: Envelope) -> Message:
+    """Render *envelope* from *subject*'s side of the exchange.
+
+    A message this participant sent is rendered as ``assistant``; anything else
+    as ``user``. The rendering is the same on a live run and on a replay — that
+    equality is what makes a resumed session faithful.
+
+    Args:
+        subject: The role whose side is being rendered.
+        envelope: The message to render.
+    """
+    payload = '' if envelope.payload is None else f' payload={envelope.payload!r}'
+    sender = envelope.sender.name
+    receiver = envelope.receiver.name
+    if envelope.sender == subject:
+        return Message(
+            role='assistant',
+            content=f'Sent {envelope.label} to {receiver}.{payload}',
+        )
+    return Message(
+        role='user',
+        content=(f'Received {envelope.label} from {sender} to {receiver}.{payload}'),
+    )
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"subject"} type={"Role"} value={undefined}>
+
+The role whose side is being rendered.
+
+</PyParameter>
+<PyParameter name={"envelope"} type={"Envelope"} value={undefined}>
+
+The message to render.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.llm.types.Message"} />
+
+</PyFunction>
+
+</Tab>
+
+</Tabs>

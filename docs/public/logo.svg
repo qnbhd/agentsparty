@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500"
+     width="500" height="500" role="img" aria-label="agentsparty">
+  <g transform="matrix(1, 0, 0, 1, 115.738722, 147.395567)" style="fill:rgb(0, 0, 0);stroke:none;color:rgb(11, 11, 11);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">
+    <rect x="-115.74" y="-147.4" width="500.001" height="500.004" rx="160" style="stroke: none; color: rgb(11, 11, 11); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; opacity: 1; font-family: &quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif; font-size: 16px; font-weight: 400; text-anchor: start; dominant-baseline: auto; fill: rgb(5, 31, 32);" ry="160"></rect>
+    <text transform="matrix(-1, 0, 0, -1, 0, 0)" style="fill: rgb(215, 255, 100); font-family: &quot;EB Garamond&quot;; font-size: 300px; font-weight: 700; text-anchor: middle; white-space: pre;" x="-133.04" y="-7.016">&amp;</text>
+    <text x="60" y="150" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" letter-spacing="3" fill="#A6A6B8" style="fill: rgb(166, 166, 184); stroke: none; color: rgb(11, 11, 11); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; opacity: 1; font-family: &quot;Segoe UI&quot;, Arial, sans-serif; font-size: 12px; font-weight: 400; text-anchor: middle; dominant-baseline: auto; white-space: pre;"> </text>
+  </g>
+  <defs>
+    <style>@import url(https://fonts.googleapis.com/css2?family=EB+Garamond%3Aital%2Cwght%400%2C400..800%3B1%2C400..800&amp;display=swap);</style>
+  </defs>
+</svg>

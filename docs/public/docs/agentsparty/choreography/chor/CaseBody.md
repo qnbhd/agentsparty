@@ -1,0 +1,32 @@
+# CaseBody (/docs/agentsparty/choreography/chor/CaseBody)
+
+Context manager for one branch under a `Verdict`.
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, decide, message) -> None"}>
+
+Prepare a recorder for one alt branch.
+
+<PySourceCode >
+
+```python
+def __init__(self, decide: Decide, message: Case[Any] | str | Label) -> None:
+    """Prepare a recorder for one alt branch."""
+    self._decide = decide
+    self._message = message
+    self._scope = _Scope()
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"decide"} type={"Decide"} value={null} />
+<PyParameter name={"message"} type={"Case[Any] | str | Label"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

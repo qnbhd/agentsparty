@@ -1,0 +1,302 @@
+# See https://import-linter.readthedocs.io/en/stable/
+#
+# The contracts below are the architecture written down. They come in three
+# kinds, and the kind carries meaning:
+#
+#   layers    — "who may depend on whom", top-down. `exhaustive = True` makes
+#               every new module a deliberate placement rather than a default.
+#   protected — "who may reach for this", listing the only allowed importers.
+#               Used for seams that exist for one consumer.
+#   forbidden — "this may not be reached at all", used for capabilities
+#               (I/O, optional dependencies) rather than for modules.
+
+[importlinter]
+root_package = agentsparty
+include_external_packages = True
+exclude_type_checking_imports = True
+
+# ---------------------------------------------------------------------------
+# The package as a whole
+# ---------------------------------------------------------------------------
+
+[importlinter:contract:agentsparty-layers]
+name = agentsparty depends downwards
+type = layers
+exhaustive = True
+
+containers =
+    agentsparty
+
+layers =
+    debug
+    runtime
+    agent | human | machine | toolbox
+    brief | journal | tracing
+    llm
+    choreography | participant
+    protocol
+    kernel
+    _utils
+
+# ADR 0052 keeps the OpenAI provider adapter in `llm.openai`: it emits
+# streaming deltas as tracing signals, so these two observation imports reach
+# up into `tracing`. They are pinned here so a third one breaks the contract.
+ignore_imports =
+    agentsparty.llm.openai -> agentsparty.tracing.scope
+    agentsparty.llm.openai -> agentsparty.tracing.signals
+
+[importlinter:contract:acyclic-siblings]
+name = Siblings remain acyclic at every level
+type = acyclic_siblings
+
+ancestors =
+    agentsparty
+
+# ADR 0052 also records this remaining package-level `llm`/`tracing`
+# observation edge as the provider adapter's narrow exception.
+ignore_imports =
+    agentsparty.llm.openai -> agentsparty.tracing.scope
+    agentsparty.llm.openai -> agentsparty.tracing.signals
+
+# ---------------------------------------------------------------------------
+# Inside the packages
+# ---------------------------------------------------------------------------
+
+[importlinter:contract:protocol-layers]
+name = Protocol implementation depends downwards
+type = layers
+exhaustive = True
+
+containers =
+    agentsparty.protocol
+
+layers =
+    _binding | graph | routine
+    _conformance
+    render
+    analysis | session
+    language
+
+[importlinter:contract:protocol-language-layers]
+name = Shared protocol language depends downwards
+type = layers
+exhaustive = True
+
+containers =
+    agentsparty.protocol.language
+
+layers =
+    endpoint
+    core
+    raw
+
+[importlinter:contract:kernel-layers]
+name = Kernel primitives depend only on utility assertions
+type = layers
+exhaustive = True
+
+containers =
+    agentsparty.kernel
+
+layers =
+    console | errors | nonempty | role
+    budget
+
+[importlinter:contract:journal-layers]
+name = Journal backends depend on journal types
+type = layers
+exhaustive = True
+
+containers =
+    agentsparty.journal
+
+layers =
+    jsonl | memory | sqlite
+    types
+    _canonical
+
+[importlinter:contract:tracing-layers]
+name = Tracing implementations depend on tracing types
+type = layers
+exhaustive = True
+
+containers =
+    agentsparty.tracing
+
+layers =
+    _folds | memory | model | queue | sqlite | stream
+    facet | scope
+    types
+    signals
+
+[importlinter:contract:llm-layers]
+name = Language-model implementations depend on LLM types
+type = layers
+exhaustive = True
+
+containers =
+    agentsparty.llm
+
+layers =
+    compose | openai | profile | scripted
+    types
+
+[importlinter:contract:session-layers]
+name = Session-type implementation depends downwards
+type = layers
+exhaustive = True
+
+containers =
+    agentsparty.protocol.session
+
+layers =
+    _composition | _termination
+    _projection
+    _syntax
+    _bridge | _equivalence
+    _wellformed
+    _recursion | _participants
+    types
+
+# ---------------------------------------------------------------------------
+# Seams: modules that exist for a named consumer
+# ---------------------------------------------------------------------------
+
+[importlinter:contract:console-is-for-the-cli]
+name = The console seam exists for the human participant
+type = protected
+
+protected_modules =
+    agentsparty.kernel.console
+
+allowed_importers =
+    agentsparty.human
+    agentsparty.debug
+    agentsparty.kernel
+
+[importlinter:contract:raw-is-the-payload-boundary]
+name = Raw payload decoding is reached only from the codec and the journal
+type = protected
+
+# `agentsparty.protocol.language.raw` is where an unknown JSON value becomes a typed one.
+# Parse, don't validate: nothing else re-checks the value, and nothing else
+# gets to see it untyped.
+protected_modules =
+    agentsparty.protocol.language.raw
+
+allowed_importers =
+    agentsparty.protocol.language.core
+    agentsparty.journal.jsonl
+    agentsparty.journal.sqlite
+
+[importlinter:contract:no-session-facade-from-leaves]
+name = Session implementation leaves do not import the session facade
+type = forbidden
+
+source_modules =
+    agentsparty.protocol.session.*
+
+forbidden_modules =
+    agentsparty.protocol.session
+
+[importlinter:contract:no-conformance-session]
+name = Conformance does not import session
+type = forbidden
+
+source_modules =
+    agentsparty.protocol._conformance
+
+forbidden_modules =
+    agentsparty.protocol.session
+
+allow_indirect_imports = True
+
+[importlinter:contract:journal-does-not-render]
+name = Journal does not import protocol rendering
+type = forbidden
+
+source_modules =
+    agentsparty.journal.*
+
+forbidden_modules =
+    agentsparty.protocol.render
+
+allow_indirect_imports = True
+
+[importlinter:contract:session-internals-stay-internal]
+name = Session internals are reached only from their known callers
+type = protected
+
+# The session package publishes a facade; underscore-prefixed implementation
+# leaves are now reached only from within that package.
+protected_modules =
+    agentsparty.protocol.session._bridge
+    agentsparty.protocol.session._composition
+    agentsparty.protocol.session._equivalence
+    agentsparty.protocol.session._projection
+    agentsparty.protocol.session._participants
+    agentsparty.protocol.session._recursion
+    agentsparty.protocol.session._syntax
+    agentsparty.protocol.session._termination
+    agentsparty.protocol.session._wellformed
+
+allowed_importers =
+    agentsparty.protocol.session
+
+# ---------------------------------------------------------------------------
+# Capabilities: what a module is allowed to *do*, not what it may import
+# ---------------------------------------------------------------------------
+
+[importlinter:contract:protocol-does-no-io]
+name = The protocol algebra performs no I/O
+type = forbidden
+
+# The session-type theory and its choreography front-end are pure and
+# synchronous: they build and analyse ASTs. Anything that touches the clock,
+# the filesystem, the network or the event loop belongs above them.
+source_modules =
+    agentsparty.protocol
+    agentsparty.choreography
+
+forbidden_modules =
+    asyncio
+    os
+    pathlib
+    sqlite3
+    sys
+
+[importlinter:contract:serialisation-at-the-boundary]
+name = JSON is spoken only at the persistence boundary
+type = protected
+
+protected_modules =
+    json
+
+allowed_importers =
+    agentsparty.protocol.language.raw
+    agentsparty.journal
+    agentsparty.tracing.sqlite
+
+[importlinter:contract:sqlite-stays-in-its-backends]
+name = SQLite is spoken only by the SQLite backends
+type = protected
+
+protected_modules =
+    sqlite3
+
+allowed_importers =
+    agentsparty.journal.sqlite
+    agentsparty.tracing.sqlite
+
+[importlinter:contract:no-optional-openai-dependency]
+name = OpenAI is used only by the OpenAI backend
+type = forbidden
+
+source_modules =
+    agentsparty
+
+forbidden_modules =
+    openai
+
+ignore_imports =
+    agentsparty.llm.openai -> openai

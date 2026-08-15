@@ -1,0 +1,28 @@
+---
+title: SessionCancelled
+---
+
+The session ended anywhere other than ``end``; every participant heard.
+
+The second way a session span can terminate, and the sibling of
+`SessionFinished`: exactly one of the two closes a session.
+``Failed`` is not that terminator — it says a span's body raised, which is
+true of model and tool spans too, and says nothing about the participants.
+
+## Attributes
+
+<PyAttribute name={"notice"} type={"Cancelled"} value={null} />
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, notice) -> None"}>
+
+<div >
+
+<PyParameter name={"notice"} type={"Cancelled"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

@@ -1,0 +1,312 @@
+/* Diagram tokens: light/dark, reduced motion, print */
+
+.frame {
+  container-type: inline-size;
+  --diagram-bg: var(--color-fd-card, hsl(0 0% 100%));
+  --diagram-border: var(--color-fd-border, hsl(0 0% 89%));
+  --diagram-fg: var(--color-fd-foreground, hsl(0 6% 10%));
+  --diagram-muted: var(--color-fd-muted-foreground, hsl(0 0% 40%));
+  --diagram-primary: var(--color-fd-primary, hsl(75 75% 24%));
+  --diagram-accent-foreground: var(--color-fd-accent-foreground, hsl(75 72% 17%));
+  --diagram-ring: var(--color-fd-ring, hsl(75 60% 42%));
+  /* Semantic roles use tones from the documentation palette, not new hues. */
+  --diagram-amber: var(--diagram-ring);
+  --diagram-violet: var(--diagram-accent-foreground);
+  --diagram-blue: color-mix(in oklab, var(--diagram-ring) 70%, var(--diagram-fg));
+  --diagram-green: var(--diagram-primary);
+  --diagram-red: var(--diagram-accent-foreground);
+  --diagram-cyan: color-mix(in oklab, var(--diagram-ring) 55%, var(--diagram-fg));
+  --diagram-graphite: var(--diagram-fg);
+  --role-writer: var(--diagram-primary);
+  --role-reviewer: var(--diagram-ring);
+  --role-reader: var(--diagram-accent-foreground);
+  --branch-approve: var(--diagram-primary);
+  --branch-reject: var(--diagram-ring);
+  --fault: var(--diagram-accent-foreground);
+  /* Neutral raised surface and secondary text (theme-aware). */
+  --diagram-surface-2: color-mix(in oklab, var(--diagram-fg) 9%, var(--diagram-bg));
+  --diagram-text-secondary: color-mix(in oklab, var(--diagram-fg) 72%, var(--diagram-bg));
+
+  border: 1px solid var(--diagram-border);
+  border-radius: 0.75rem;
+  background: var(--diagram-bg);
+  color: var(--diagram-fg);
+  padding: 1rem 1.1rem 0.9rem;
+  margin: 1.25rem 0;
+  box-shadow: 0 1rem 2.5rem -2rem color-mix(in oklab, var(--diagram-fg) 35%, transparent);
+  overflow: hidden;
+}
+
+.title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+}
+
+.caption {
+  font-size: 0.85rem;
+  color: var(--diagram-muted);
+  margin: 0 0 0.75rem;
+}
+
+.description {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.canvas {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.sequenceStep,
+.timelineEvent,
+.boardNode {
+  animation: diagram-enter 500ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.projectionColumn {
+  background: color-mix(in oklab, var(--diagram-primary) 4%, var(--diagram-bg));
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.projectionColumn:hover {
+  transform: translateY(-2px);
+  border-color: var(--diagram-primary) !important;
+  box-shadow: 0 0.75rem 1.5rem -1.25rem var(--diagram-primary);
+}
+
+.boardNode {
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.boardNode:hover {
+  transform: translateY(-3px);
+  border-color: var(--diagram-primary) !important;
+  box-shadow: 0 0.75rem 1.5rem -1.25rem var(--diagram-primary);
+}
+
+.playerStage {
+  background:
+    radial-gradient(circle at 90% 10%, color-mix(in oklab, var(--diagram-amber) 16%, transparent), transparent 45%),
+    linear-gradient(135deg, color-mix(in oklab, var(--diagram-primary) 7%, transparent), transparent 60%);
+  animation: player-pulse 700ms ease both;
+}
+
+.playerProgress {
+  display: flex;
+  gap: 0.3rem;
+  margin-bottom: 0.8rem;
+}
+
+.playerProgress span {
+  height: 0.25rem;
+  flex: 1;
+  border-radius: 99px;
+  background: var(--diagram-border);
+  transition: background 250ms ease, transform 250ms ease;
+}
+
+.playerProgress .progressActive {
+  background: var(--diagram-primary);
+  transform: scaleY(1.5);
+}
+
+.role {
+  fill: var(--diagram-bg);
+  stroke: var(--diagram-fg);
+  stroke-width: 1.5;
+}
+
+.roleText {
+  fill: var(--diagram-fg);
+  font-size: 12px;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+.message {
+  stroke: var(--diagram-primary);
+  stroke-width: 1.5;
+  fill: none;
+  marker-end: url(#arrowhead);
+}
+
+.alt {
+  stroke: var(--diagram-amber);
+  stroke-dasharray: 4 3;
+}
+
+.model {
+  stroke: var(--diagram-blue);
+}
+
+.tool {
+  stroke: var(--diagram-green);
+}
+
+.cancel {
+  stroke: var(--diagram-red);
+  stroke-dasharray: 3 2;
+}
+
+.replay {
+  stroke: var(--diagram-cyan);
+}
+
+.projectionDash {
+  stroke: var(--diagram-violet);
+  stroke-dasharray: 5 4;
+  fill: none;
+}
+
+.lifeline {
+  stroke: var(--diagram-border);
+  stroke-dasharray: 2 4;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.controls button {
+  border: 1px solid var(--diagram-border);
+  background: transparent;
+  color: var(--diagram-fg);
+  border-radius: 0.4rem;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.controls button:hover,
+.controls button:focus-visible {
+  border-color: var(--diagram-primary);
+  outline: 2px solid var(--diagram-primary);
+  outline-offset: 1px;
+}
+
+.controls button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.stepLabel {
+  font-size: 0.8rem;
+  color: var(--diagram-muted);
+  margin-left: 0.25rem;
+}
+
+.fallback {
+  font-size: 0.85rem;
+  color: var(--diagram-muted);
+  margin: 0.75rem 0 0;
+}
+
+.fallback summary {
+  display: inline-block;
+  cursor: pointer;
+  color: var(--diagram-fg);
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid var(--diagram-border);
+  border-radius: 0.4rem;
+  padding: 0.25rem 0.55rem;
+  user-select: none;
+}
+
+.fallback summary:hover,
+.fallback summary:focus-visible {
+  border-color: var(--diagram-primary);
+  outline: 2px solid var(--diagram-primary);
+  outline-offset: 1px;
+}
+
+.currentStep {
+  margin: 0.65rem 0 0;
+  color: var(--diagram-muted);
+  font-size: 0.85rem;
+}
+
+.staticList {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+}
+
+.renderText {
+  margin: 0;
+  padding: 0.6rem 0.7rem;
+  background: color-mix(in oklab, var(--diagram-bg) 82%, var(--diagram-fg));
+  border: 1px solid var(--diagram-border);
+  border-radius: 0.4rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.timelineDot {
+  fill: var(--diagram-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media print {
+  .controls {
+    display: none;
+  }
+
+  .fallback {
+    display: block !important;
+    margin-top: 0.75rem;
+  }
+
+  .fallback summary {
+    display: none;
+  }
+
+  .fallback:not([open]) > :not(summary) {
+    display: block;
+  }
+
+  .printSteps {
+    display: block;
+  }
+}
+
+.printSteps {
+  display: none;
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.printSteps ol {
+  margin: 0.25rem 0 0;
+  padding-left: 1.2rem;
+}
+
+@keyframes diagram-enter {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes player-pulse {
+  from { opacity: 0.35; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

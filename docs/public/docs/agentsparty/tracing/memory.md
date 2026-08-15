@@ -1,0 +1,17 @@
+# memory (/docs/agentsparty/tracing/memory/index)
+
+In-memory tracer for tests, doctests and assertions.
+
+<Tabs items={["Class"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"MemoryTracer"} href={"/docs/agentsparty/tracing/memory/MemoryTracer"} />
+
+</Cards>
+
+</Tab>
+
+</Tabs>

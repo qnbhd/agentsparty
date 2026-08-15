@@ -1,0 +1,17 @@
+# sqlite (/docs/agentsparty/journal/sqlite/index)
+
+SQLite sink: one row per decision, keyed by session, track and step.
+
+<Tabs items={["Class"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"SqliteJournal"} href={"/docs/agentsparty/journal/sqlite/SqliteJournal"} />
+
+</Cards>
+
+</Tab>
+
+</Tabs>

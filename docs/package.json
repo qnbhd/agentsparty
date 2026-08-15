@@ -1,0 +1,44 @@
+{
+  "name": "agentsparty-docs",
+  "private": true,
+  "scripts": {
+    "dev": "fumadocs-mdx && next dev",
+    "build": "npm run docs:generate && next build",
+    "docs:generate": "uv run --project .. --with ./node_modules/fumadocs-python python scripts/dump-python-api.py && node scripts/generate-docs.mjs && node scripts/generate-llms.mjs",
+    "docs:quality": "uv run --project .. python scripts/quality-report.py quality-report.json && node scripts/check-diagrams.mjs",
+    "check": "npm run docs:generate && node scripts/check-mdx.mjs && uv run --project .. python scripts/check-mdx-examples.py && node scripts/check-xrefs.mjs && node scripts/check-diagrams.mjs && node scripts/check-generated-staleness.mjs && uv run --project .. python scripts/check-api-breaking.py",
+    "test:diagrams": "node scripts/check-diagrams.mjs",
+    "preview": "node scripts/preview.mjs"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.7.0",
+    "@fuma-translate/react": "^1.0.2",
+    "@fumadocs/base-ui": "^16.14.2",
+    "@xyflow/react": "^12.11.2",
+    "class-variance-authority": "^0.7.1",
+    "cnfast": "^0.1.0",
+    "elkjs": "^0.12.0",
+    "fumadocs-core": "16.14.2",
+    "fumadocs-python": "0.1.1",
+    "fumadocs-ui": "16.14.2",
+    "jsdom": "^26.1.0",
+    "lucide-react": "^1.30.0",
+    "mermaid": "^11.12.3",
+    "next": "16.3.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "shiki": "3.22.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/jsdom": "^30.0.0",
+    "@types/mdx": "^2.0.13",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "fumadocs-mdx": "15.2.2",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.8.3",
+    "unist-util-visit": "^5.1.0"
+  }
+}

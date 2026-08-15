@@ -1,0 +1,19 @@
+# language (/docs/agentsparty/protocol/language/index)
+
+Canonical public homes for the shared protocol language leaves.
+
+<Tabs items={["Modules"]}>
+
+<Tab value={"Modules"}>
+
+<Cards >
+
+<Card href={"/docs/agentsparty/protocol/language/core"} title={"core"} />
+<Card href={"/docs/agentsparty/protocol/language/raw"} title={"raw"} />
+<Card href={"/docs/agentsparty/protocol/language/endpoint"} title={"endpoint"} />
+
+</Cards>
+
+</Tab>
+
+</Tabs>

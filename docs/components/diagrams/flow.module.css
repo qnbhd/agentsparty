@@ -1,0 +1,82 @@
+.surface {
+  height: 23rem;
+  min-width: 32rem;
+  overflow: hidden;
+  border: 1px solid var(--diagram-border);
+  border-radius: 0.7rem;
+  background: color-mix(in oklab, var(--diagram-bg) 92%, var(--diagram-primary));
+}
+
+.surface :global(.react-flow) { background: transparent; }
+.surface :global(.react-flow__controls) {
+  border: 1px solid var(--diagram-border);
+  box-shadow: 0 0.8rem 1.8rem -1.2rem oklch(0% 0 0 / 45%);
+}
+.surface :global(.react-flow__controls-button) {
+  border-bottom: 1px solid var(--diagram-border);
+  background: var(--diagram-bg);
+  color: var(--diagram-fg);
+}
+.surface :global(.react-flow__edge-path) { stroke: var(--diagram-primary); stroke-width: 2; }
+.surface :global(.flow-edge-alt) .react-flow__edge-path { stroke: var(--diagram-amber); stroke-dasharray: 5 4; }
+.surface :global(.flow-edge-model) .react-flow__edge-path { stroke: var(--diagram-blue); }
+.surface :global(.flow-edge-tool) .react-flow__edge-path { stroke: var(--diagram-green); }
+.surface :global(.flow-edge-cancel) .react-flow__edge-path { stroke: var(--diagram-red); stroke-dasharray: 4 3; }
+.surface :global(.flow-edge-replay) .react-flow__edge-path { stroke: var(--diagram-cyan); }
+.surface :global(.flow-edge-projection) .react-flow__edge-path { stroke: var(--diagram-violet); stroke-dasharray: 5 4; }
+.surface :global(.react-flow__edge-textbg) { fill: var(--diagram-bg); }
+.surface :global(.react-flow__edge-text) { fill: var(--diagram-fg); font-size: 11px; font-weight: 600; }
+
+.node {
+  display: grid;
+  min-width: 10rem;
+  max-width: 14rem;
+  gap: 0.28rem;
+  padding: 0.72rem 0.82rem;
+  border: 1px solid var(--flow-accent, var(--diagram-border));
+  border-radius: 0.7rem;
+  background: color-mix(in oklab, var(--diagram-bg) 94%, var(--flow-accent, var(--diagram-primary)));
+  color: var(--diagram-fg);
+  box-shadow: 0 0.85rem 1.5rem -1.1rem oklch(0% 0 0 / 55%);
+  transition: opacity 220ms ease, border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+.node[data-kind='global'] { --flow-accent: var(--diagram-violet); }
+.node[data-kind='endpoint'] { --flow-accent: var(--diagram-blue); }
+.node[data-kind='step'] { --flow-accent: var(--diagram-amber); }
+.node[data-kind='cancel'] { --flow-accent: var(--diagram-red); }
+.node[data-selected='true'], .nodeActive {
+  box-shadow: 0 0 0 2px var(--flow-accent), 0 1rem 2rem -1rem var(--flow-accent);
+  transform: translateY(-3px);
+}
+.nodeDimmed { opacity: 0.25; filter: saturate(0.35); }
+.nodeLabel { font-size: 0.9rem; font-weight: 700; }
+.nodeDetail {
+  max-height: 7rem;
+  overflow: auto;
+  color: var(--diagram-muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  white-space: pre-line;
+}
+.handle {
+  width: 0.45rem;
+  height: 0.45rem;
+  border: 1px solid var(--diagram-bg);
+  background: var(--diagram-primary);
+}
+.hint, .loading {
+  border: 1px solid var(--diagram-border);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--diagram-bg) 92%, transparent);
+  color: var(--diagram-muted);
+  font-size: 0.7rem;
+  backdrop-filter: blur(8px);
+}
+.loading { border-radius: 0.5rem; padding: 0.5rem 0.7rem; }
+
+@media (max-width: 42rem) {
+  .surface { min-width: 19rem; height: 20rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .node { transition: none; }
+}

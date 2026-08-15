@@ -1,0 +1,132 @@
+# Bind the roles and run (/docs/tutorials/coding-harness/bind-and-run)
+
+# Bind the roles and run
+
+The protocol and filesystem service are ready. The remaining code binds three
+model-backed agents and an interactive terminal client, then starts the session.
+
+Continue appending each block to `coding_agent.py`.
+
+## Give each agent a narrow brief
+
+The protocol constrains message order and available labels. Briefs supply the
+judgement required within those bounds: what to inspect, how to report a patch,
+and when a review issue deserves the single correction.
+
+```python compile
+PLANNER_BRIEF = (
+    'Explore with List and Read only. List the workspace, read the files '
+    'you need, then Ready and send Plan: what to change and in which file. '
+    'Do not invent files you have not read.'
+)
+CODER_BRIEF = (
+    'Carry out Plan. Write the full file contents. When the change is in '
+    'place, Done and send Patch describing what changed. After Ship, send '
+    'Idle then Delivered. After Fix, Write once more, then Delivered.'
+)
+REVIEWER_BRIEF = (
+    'Review Patch against Task and Plan. Prefer Ship when the change '
+    'matches the task. If something concrete is missing, send Fix in at '
+    'most twenty words — you review once.'
+)
+```
+
+`Repair(attempts=2)` below permits two bounded retries when a model response
+cannot be decoded as a currently available protocol choice.
+
+## Bind the cast
+
+Create one OpenAI client, then attach a participant to every role. The planner,
+coder, and reviewer share the model while retaining separate briefs and local
+protocol states. The workspace receives deterministic tools; the client uses
+interactive terminal I/O.
+
+```python compile
+def _model() -> pa.OpenAIModel:
+    client = AsyncOpenAI(
+        api_key=os.environ['OPENAI_API_KEY'], max_retries=0, timeout=30.0
+    )
+    return pa.OpenAIModel(MODEL, client)
+
+
+def build_cast(
+    root: Path,
+    client_io: Any | None = None,
+    model: Any | None = None,
+) -> pa.Cast:
+    model = _model() if model is None else model
+    client_io = pa.CliHumanIo() if client_io is None else client_io
+    return (
+        pa
+        .Cast(protocol)
+        .play(Client, pa.human(client_io))
+        .play(
+            Planner,
+            pa.agent(model, PLANNER_BRIEF, repair=pa.Repair(attempts=2)),
+        )
+        .play(Coder, pa.agent(model, CODER_BRIEF, repair=pa.Repair(attempts=2)))
+        .play(
+            Reviewer,
+            pa.agent(model, REVIEWER_BRIEF, repair=pa.Repair(attempts=2)),
+        )
+        .play(Workspace, pa.service(*workspace_tools(root)))
+    )
+```
+
+The optional `client_io` and `model` parameters make the cast usable with
+deterministic participants in tests. A normal run constructs the CLI and OpenAI
+participants automatically.
+
+## Project, run, and inspect the session
+
+Finish the script with its entry point:
+
+```python compile
+def main() -> None:
+    project_all(protocol)
+    report = debug.Report()
+    report.protocol(protocol)
+    root = Path.cwd()
+    print(f'workspace: {root}')
+    print('Enter the task when Client prompts; the protocol drives the rest.')
+    trace = build_cast(root).run_sync(allowance=pa.Allowance(unfoldings=12))
+    report.conversation(trace)
+
+
+if __name__ == '__main__':
+    main()
+```
+
+`project_all` checks that the global protocol yields a valid endpoint for every
+role. `Allowance(unfoldings=12)` bounds recursive planning and implementation
+steps. `debug.Report` prints both the declared protocol and the completed trace.
+
+## Run a task
+
+Export your API key, change to the directory the agent may edit, and pass the
+script's path to `uv run`:
+
+```bash
+export OPENAI_API_KEY=...
+cd path/to/your/project
+uv run /absolute/path/to/coding_agent.py
+```
+
+At the client prompt, select `Task` and enter a concrete request, for example:
+
+```text
+Add a function named matrix_multiply to matrix.py and cover incompatible dimensions.
+```
+
+The planner will inspect the directory before publishing its plan. The coder
+writes complete file contents, the reviewer makes one decision, and the final
+trace ends with `Delivered`. The working directory is the workspace root, so run
+the command inside a disposable repository while experimenting.
+
+The completed harness keeps its extension points visible: change the protocol to
+change authority or control flow; change briefs to refine decisions within that
+flow; change the workspace service to expose a different execution environment. See
+[participants and roles](/docs/concepts/participants-and-roles) for participant
+semantics and [protocol-first design](/docs/concepts/protocol-first) for the
+projection model used by `Cast`.
+

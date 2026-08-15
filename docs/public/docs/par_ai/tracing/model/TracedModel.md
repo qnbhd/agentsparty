@@ -1,0 +1,78 @@
+# TracedModel (/docs/agentsparty/tracing/model/TracedModel)
+
+A language model whose calls are recorded into the ambient scope.
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, inner) -> None"}>
+
+Wrap *inner* so its completions appear in the running session.
+
+<PySourceCode >
+
+```python
+def __init__(self, inner: LanguageModel) -> None:
+    """Wrap *inner* so its completions appear in the running session.
+
+    Args:
+        inner: The language model to observe.
+    """
+    self._inner = inner
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"inner"} type={"LanguageModel"} value={undefined}>
+
+The language model to observe.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"complete"} type={"(self, request) -> Answer"}>
+
+Record a model span around ``inner.complete(request)``.
+
+<PySourceCode >
+
+```python
+async def complete(self, request: StructuredRequest) -> Answer:
+    """Record a model span around ``inner.complete(request)``.
+
+    Args:
+        request: The structured-output turn to answer.
+    """
+    with (
+        current()
+        .child()
+        .open(
+            ModelCalled(request.schema_name, request.effort, len(request.messages)),
+        ) as call
+    ):
+        answer = await self._inner.complete(request)
+        call.record(ModelAnswered(answer))
+        return answer
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"request"} type={"StructuredRequest"} value={undefined}>
+
+The structured-output turn to answer.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.llm.types.Answer"} />
+
+</PyFunction>

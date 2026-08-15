@@ -1,0 +1,426 @@
+---
+title: raw
+---
+
+Reflexive perimeter: the only module where ``isinstance`` is allowed.
+
+Untrusted text becomes a closed JSON ADT (``RawValue``); every ``as_*`` is
+total relative to its signature — value or ``PayloadError``, never TypeError.
+
+<PyAttribute name={"RawValue"} type={"TypeAlias"} value={"_RawAtom | list['RawValue'] | dict[str, 'RawValue']"} />
+
+<Tabs items={["Functions"]}>
+
+<Tab value={"Functions"}>
+
+<PyFunction name={"load_json"} type={"(text) -> RawValue"}>
+
+Parse JSON text into a ``RawValue``. Sole producer of structured raw data.
+
+<PySourceCode >
+
+```python
+def load_json(text: str) -> RawValue:
+    """Parse JSON text into a ``RawValue``. Sole producer of structured raw data."""
+    try:
+        return cast(RawValue, json.loads(text))
+    except json.JSONDecodeError as exc:
+        raise PayloadError(f'expected JSON payload, got {text!r}') from exc
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"text"} type={"str"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.raw.RawValue"} />
+
+</PyFunction>
+<PyFunction name={"as_json_text"} type={"(raw) -> str"}>
+
+JSON text for model parsers. Strings pass through; other raw values dump.
+
+<PySourceCode >
+
+```python
+def as_json_text(raw: RawValue) -> str:
+    """JSON text for model parsers. Strings pass through; other raw values dump."""
+    if isinstance(raw, str):
+        return raw
+    return json.dumps(raw)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"raw"} type={"RawValue"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"str"} />
+
+</PyFunction>
+<PyFunction name={"as_object"} type={"(raw) -> dict[str, RawValue]"}>
+
+Read *raw* as a JSON object.
+
+<PySourceCode >
+
+```python
+def as_object(raw: RawValue) -> dict[str, RawValue]:
+    """Read *raw* as a JSON object.
+
+    Args:
+        raw: Raw value to interpret.
+
+    Returns:
+        The object as a mapping of string keys to raw values.
+
+    Raises:
+        PayloadError: if *raw* is not a JSON object.
+    """
+    value = _parse_container(raw)
+    if not isinstance(value, dict):
+        raise PayloadError(f'expected object payload, got {raw!r}')
+    if not all(isinstance(key, str) for key in value):
+        raise PayloadError(f'expected object payload, got {raw!r}')
+    return value
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"raw"} type={"RawValue"} value={undefined}>
+
+Raw value to interpret.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"dict"}>
+
+The object as a mapping of string keys to raw values.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"as_array"} type={"(raw) -> list[RawValue]"}>
+
+Read *raw* as a JSON array.
+
+<PySourceCode >
+
+```python
+def as_array(raw: RawValue) -> list[RawValue]:
+    """Read *raw* as a JSON array.
+
+    Args:
+        raw: Raw value to interpret.
+
+    Returns:
+        The array as a list of raw values.
+
+    Raises:
+        PayloadError: if *raw* is not a JSON array.
+    """
+    value = _parse_container(raw)
+    if not isinstance(value, list):
+        raise PayloadError(f'expected list payload, got {raw!r}')
+    return value
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"raw"} type={"RawValue"} value={undefined}>
+
+Raw value to interpret.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"list"}>
+
+The array as a list of raw values.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"as_text"} type={"(raw) -> str"}>
+
+Read *raw* as a string.
+
+<PySourceCode >
+
+```python
+def as_text(raw: RawValue) -> str:
+    """Read *raw* as a string.
+
+    Args:
+        raw: Raw value to interpret.
+
+    Returns:
+        The string value.
+
+    Raises:
+        PayloadError: if *raw* is not a string.
+    """
+    if isinstance(raw, str):
+        return raw
+    raise PayloadError(f'expected str payload, got {raw!r}')
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"raw"} type={"RawValue"} value={undefined}>
+
+Raw value to interpret.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"str"}>
+
+The string value.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"as_integer"} type={"(raw) -> int"}>
+
+Read *raw* as an integer, accepting numeric strings.
+
+<PySourceCode >
+
+```python
+def as_integer(raw: RawValue) -> int:
+    """Read *raw* as an integer, accepting numeric strings.
+
+    Args:
+        raw: Raw value to interpret.
+
+    Returns:
+        The integer value.
+
+    Raises:
+        PayloadError: if *raw* is not an int or an int-like string.
+    """
+    if isinstance(raw, bool) or raw is None:
+        raise PayloadError(f'expected int payload, got {raw!r}')
+    if isinstance(raw, int):
+        return raw
+    if isinstance(raw, str):
+        try:
+            return int(raw.strip())
+        except ValueError as exc:
+            raise PayloadError(f'expected int payload, got {raw!r}') from exc
+    raise PayloadError(f'expected int payload, got {raw!r}')
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"raw"} type={"RawValue"} value={undefined}>
+
+Raw value to interpret.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"int"}>
+
+The integer value.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"as_number"} type={"(raw) -> float"}>
+
+Read *raw* as a finite number, accepting numeric strings.
+
+<PySourceCode >
+
+```python
+def as_number(raw: RawValue) -> float:
+    """Read *raw* as a finite number, accepting numeric strings.
+
+    Args:
+        raw: Raw value to interpret.
+
+    Returns:
+        The number as a finite float.
+
+    Raises:
+        PayloadError: if *raw* is not numeric, is a non-finite value
+            (NaN/±Inf), or is not a finite numeric string.
+    """
+    if isinstance(raw, bool) or raw is None:
+        raise PayloadError(f'expected float payload, got {raw!r}')
+    if isinstance(raw, int | float):
+        return _finite_float(float(raw), raw)
+    if isinstance(raw, str):
+        try:
+            parsed = float(raw.strip())
+        except ValueError as exc:
+            raise PayloadError(f'expected float payload, got {raw!r}') from exc
+        return _finite_float(parsed, raw)
+    raise PayloadError(f'expected float payload, got {raw!r}')
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"raw"} type={"RawValue"} value={undefined}>
+
+Raw value to interpret.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"float"}>
+
+The number as a finite float.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"as_flag"} type={"(raw) -> bool"}>
+
+Read *raw* as a boolean, accepting truthy/falsy strings.
+
+<PySourceCode >
+
+```python
+def as_flag(raw: RawValue) -> bool:
+    """Read *raw* as a boolean, accepting truthy/falsy strings.
+
+    Args:
+        raw: Raw value to interpret.
+
+    Returns:
+        The boolean value.
+
+    Raises:
+        PayloadError: if *raw* is neither a bool nor a truthy/falsy string.
+    """
+    if isinstance(raw, bool):
+        return raw
+    if isinstance(raw, str):
+        normalized = raw.strip().lower()
+        if normalized in {'true', '1', 'yes'}:
+            return True
+        if normalized in {'false', '0', 'no'}:
+            return False
+    raise PayloadError(f'expected bool payload, got {raw!r}')
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"raw"} type={"RawValue"} value={undefined}>
+
+Raw value to interpret.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"bool"}>
+
+The boolean value.
+
+</PyFunctionReturn>
+
+</PyFunction>
+<PyFunction name={"as_null"} type={"(raw) -> None"}>
+
+Read *raw* as JSON ``null``.
+
+<PySourceCode >
+
+```python
+def as_null(raw: RawValue) -> None:
+    """Read *raw* as JSON ``null``.
+
+    Args:
+        raw: Raw value to interpret.
+
+    Raises:
+        PayloadError: if *raw* is not null.
+    """
+    if raw is None or raw == 'null':
+        return
+    raise PayloadError(f'expected null payload, got {raw!r}')
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"raw"} type={"RawValue"} value={undefined}>
+
+Raw value to interpret.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+<PyFunction name={"as_nothing"} type={"(raw) -> None"}>
+
+Read *raw* as "no payload" (only ``null`` is accepted).
+
+<PySourceCode >
+
+```python
+def as_nothing(raw: RawValue) -> None:
+    """Read *raw* as "no payload" (only ``null`` is accepted).
+
+    Args:
+        raw: Raw value to interpret.
+
+    Raises:
+        PayloadError: if *raw* is anything but null.
+    """
+    if raw is None:
+        return
+    raise PayloadError(f'expected no payload, got {raw!r}')
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"raw"} type={"RawValue"} value={undefined}>
+
+Raw value to interpret.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+</Tab>
+
+</Tabs>

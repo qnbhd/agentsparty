@@ -1,0 +1,47 @@
+---
+title: Usage
+---
+
+What one completion was billed.
+
+Bills add up: `NO_USAGE` changes nothing when added, and the order
+the parts were added in does not matter — the same shape as
+[`Spent`](/docs/agentsparty/kernel/budget/Spent).
+
+Two fields name a *part of* another field rather than a separate charge:
+``cached_input_tokens`` are input tokens served from the provider's cache,
+and ``reasoning_tokens`` are output tokens spent thinking. Neither is added
+into `total_tokens` a second time.
+
+## Attributes
+
+<PyAttribute name={"input_tokens"} type={"int"} value={"0"} />
+
+<PyAttribute name={"output_tokens"} type={"int"} value={"0"} />
+
+<PyAttribute name={"cached_input_tokens"} type={"int"} value={"0"} />
+
+<PyAttribute name={"reasoning_tokens"} type={"int"} value={"0"} />
+
+<PyAttribute name={"total_tokens"} type={"int"} value={null}>
+
+Input plus output; the parts-of fields are already inside those.
+
+</PyAttribute>
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, input_tokens=0, output_tokens=0, cached_input_tokens=0, reasoning_tokens=0) -> None"}>
+
+<div >
+
+<PyParameter name={"input_tokens"} type={"int"} value={"0"} />
+<PyParameter name={"output_tokens"} type={"int"} value={"0"} />
+<PyParameter name={"cached_input_tokens"} type={"int"} value={"0"} />
+<PyParameter name={"reasoning_tokens"} type={"int"} value={"0"} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

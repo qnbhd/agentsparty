@@ -1,0 +1,298 @@
+.figure {
+  --comp-bg: var(--color-fd-card, #fff);
+  --comp-fg: var(--color-fd-foreground, #181717);
+  --comp-muted: var(--color-fd-muted-foreground, #666);
+  --comp-line: var(--color-fd-border, #ddd);
+  --comp-accent: var(--color-fd-primary, #587315);
+  /* second ownership hue: must stay distinguishable from the accent in both themes */
+  --comp-second: #4f74c8;
+  --comp-danger: #c2603a;
+
+  max-width: 40rem;
+  margin: 0.85rem auto 1.15rem;
+  overflow: hidden;
+  border: 1px solid var(--comp-line);
+  border-radius: 0.7rem;
+  background: var(--comp-bg);
+  padding-block: 0.35rem;
+  box-shadow: 0 1rem 2rem -1.8rem color-mix(in oklab, var(--comp-fg) 28%, transparent);
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  color: var(--comp-fg);
+  font-family: 'Geist Mono', ui-monospace, monospace;
+}
+
+.sectionLabel {
+  fill: var(--comp-muted);
+  font: 600 8.5px/1 ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.note {
+  fill: var(--comp-muted);
+  font-size: 8.5px;
+}
+
+/* --- compose: contract row + ownership zones --- */
+
+.contractStep {
+  fill: var(--comp-bg);
+  stroke: var(--comp-line);
+  stroke-width: 1.2;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: step-in 460ms cubic-bezier(.16,1,.3,1) both;
+}
+
+.contractStep:nth-of-type(2) { animation-delay: 70ms; }
+.contractStep:nth-of-type(3) { animation-delay: 140ms; }
+
+.stepText {
+  fill: var(--comp-fg);
+  font-size: 9px;
+  text-anchor: middle;
+}
+
+.frame {
+  fill: none;
+  stroke: var(--comp-line);
+  stroke-dasharray: 3 4;
+}
+
+.zone {
+  stroke-width: 1.2;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: zone-in 540ms 220ms cubic-bezier(.16,1,.3,1) both;
+}
+
+.zoneA {
+  fill: color-mix(in oklab, var(--comp-accent) 12%, transparent);
+  stroke: color-mix(in oklab, var(--comp-accent) 65%, var(--comp-line));
+}
+
+.zoneB {
+  fill: color-mix(in oklab, var(--comp-second) 12%, transparent);
+  stroke: color-mix(in oklab, var(--comp-second) 65%, var(--comp-line));
+  animation-delay: 320ms;
+}
+
+.zoneLabel {
+  font-size: 8px;
+  font-weight: 650;
+  text-anchor: middle;
+}
+
+.zoneLabelA { fill: color-mix(in oklab, var(--comp-accent) 80%, var(--comp-fg)); }
+.zoneLabelB { fill: color-mix(in oklab, var(--comp-second) 80%, var(--comp-fg)); }
+
+.role {
+  fill: var(--comp-bg);
+  stroke: color-mix(in oklab, var(--comp-fg) 32%, var(--comp-bg));
+  stroke-width: 1.2;
+}
+
+.roleUnowned {
+  stroke-dasharray: 3 3;
+}
+
+.roleText {
+  fill: var(--comp-fg);
+  font-size: 9px;
+  font-weight: 650;
+  text-anchor: middle;
+}
+
+.rail {
+  fill: none;
+  stroke: var(--comp-line);
+  stroke-dasharray: 2 4;
+}
+
+.signal {
+  fill: var(--comp-accent);
+  filter: drop-shadow(0 0 3px color-mix(in oklab, var(--comp-accent) 55%, transparent));
+  animation: contract-signal 3.6s ease-in-out infinite;
+}
+
+/* --- termination: two tiny graphs --- */
+
+.panelTitle {
+  fill: var(--comp-muted);
+  font-size: 8.5px;
+}
+
+.divider {
+  stroke: var(--comp-line);
+  stroke-dasharray: 2 4;
+}
+
+.node {
+  fill: var(--comp-bg);
+  stroke: color-mix(in oklab, var(--comp-accent) 70%, var(--comp-line));
+  stroke-width: 1.2;
+}
+
+.terminal {
+  fill: var(--comp-bg);
+  stroke: color-mix(in oklab, var(--comp-fg) 32%, var(--comp-bg));
+  stroke-width: 1.2;
+}
+
+.nodeText {
+  fill: var(--comp-fg);
+  font-size: 9px;
+  font-weight: 650;
+  text-anchor: middle;
+}
+
+.edge {
+  fill: none;
+  stroke: color-mix(in oklab, var(--comp-fg) 38%, var(--comp-bg));
+  stroke-width: 1.25;
+  stroke-linecap: round;
+}
+
+.loop {
+  fill: none;
+  stroke: color-mix(in oklab, var(--comp-fg) 22%, var(--comp-bg));
+  stroke-width: 1.25;
+  stroke-linecap: round;
+}
+
+/* travelling dash: pathLength="100" keeps the timing identical on every path */
+.travel {
+  fill: none;
+  stroke: var(--comp-accent);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 12 88;
+  animation: travel 2.6s linear infinite;
+}
+
+.travelExit {
+  stroke: var(--comp-second);
+  animation-duration: 2.6s;
+  animation-delay: 1.3s;
+}
+
+.verdict {
+  font-size: 8.5px;
+  font-weight: 650;
+  fill: var(--comp-muted);
+  animation: fade-up 420ms 320ms ease-out both;
+}
+
+.yes { fill: color-mix(in oklab, var(--comp-accent) 80%, var(--comp-fg)); }
+.no { fill: color-mix(in oklab, var(--comp-danger) 80%, var(--comp-fg)); }
+
+/* --- allowance: three gauges --- */
+
+.gaugeLabel {
+  fill: var(--comp-fg);
+  font-size: 9.5px;
+}
+
+.track {
+  fill: color-mix(in oklab, var(--comp-fg) 8%, var(--comp-bg));
+  stroke: var(--comp-line);
+  stroke-width: 1;
+}
+
+.fill {
+  fill: color-mix(in oklab, var(--comp-accent) 55%, var(--comp-bg));
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: fill-up 3.6s cubic-bezier(.4,0,.2,1) infinite both;
+}
+
+.limit {
+  stroke: var(--comp-danger);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+.errorChip {
+  fill: color-mix(in oklab, var(--comp-danger) 10%, var(--comp-bg));
+  stroke: color-mix(in oklab, var(--comp-danger) 60%, var(--comp-line));
+  stroke-width: 1.2;
+  animation: chip-in 3.6s ease-out infinite both;
+}
+
+.errorText {
+  fill: color-mix(in oklab, var(--comp-danger) 75%, var(--comp-fg));
+  font-size: 9px;
+  font-weight: 650;
+  text-anchor: middle;
+  animation: chip-in 3.6s ease-out infinite both;
+}
+
+.rowB { animation-delay: 300ms; }
+.rowC { animation-delay: 600ms; }
+
+.caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes step-in {
+  from { opacity: 0; transform: translateX(-5px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes zone-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes contract-signal {
+  0%, 8% { opacity: 0; transform: translateX(0); }
+  16% { opacity: 1; }
+  70% { opacity: 1; transform: translateX(478px); }
+  82%, 100% { opacity: 0; transform: translateX(478px); }
+}
+
+@keyframes travel {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fill-up {
+  0% { opacity: 0.45; transform: scaleX(0.02); }
+  55%, 100% { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes chip-in {
+  0%, 50% { opacity: 0.35; }
+  66%, 100% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .figure * {
+    animation: none !important;
+  }
+}
+
+@media print {
+  .figure {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+}

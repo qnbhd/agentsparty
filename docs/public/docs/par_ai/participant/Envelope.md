@@ -1,0 +1,30 @@
+# Envelope (/docs/agentsparty/participant/Envelope)
+
+A delivered protocol message from sender to receiver.
+
+## Attributes
+
+<PyAttribute name={"sender"} type={"Role"} value={null} />
+
+<PyAttribute name={"receiver"} type={"Role"} value={null} />
+
+<PyAttribute name={"label"} type={"Label"} value={null} />
+
+<PyAttribute name={"payload"} type={"object"} value={"None"} />
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, sender, receiver, label, payload=None) -> None"}>
+
+<div >
+
+<PyParameter name={"sender"} type={"Role"} value={null} />
+<PyParameter name={"receiver"} type={"Role"} value={null} />
+<PyParameter name={"label"} type={"Label"} value={null} />
+<PyParameter name={"payload"} type={"object"} value={"None"} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

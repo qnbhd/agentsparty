@@ -1,0 +1,233 @@
+# Report (/docs/agentsparty/debug/Report)
+
+Titled sections of a session, written to a ``Console``.
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, console=None) -> None"}>
+
+Create a report writing to *console*, or the process stdout.
+
+<PySourceCode >
+
+```python
+def __init__(self, console: Console | None = None) -> None:
+    """Create a report writing to *console*, or the process stdout."""
+    self._console = _DEFAULT_CONSOLE if console is None else console
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"console"} type={"Console | None"} value={"None"} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"protocol"} type={"(self, node, *, title='protocol') -> None"}>
+
+Write the rendered protocol as one titled section.
+
+<PySourceCode >
+
+```python
+def protocol(self, node: SessionType, *, title: str = 'protocol') -> None:
+    """Write the rendered protocol as one titled section."""
+    # Deliberately does not project: projection is a check, not a print.
+    self._section(title, [render(node)])
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SessionType"} value={null} />
+<PyParameter name={"title"} type={"str"} value={"'protocol'"} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"conversation"} type={"(self, envelopes, *, title='conversation') -> None"}>
+
+Write one formatted line for each delivered envelope.
+
+<PySourceCode >
+
+```python
+def conversation(
+    self,
+    envelopes: Iterable[Envelope],
+    *,
+    title: str = 'conversation',
+) -> None:
+    """Write one formatted line for each delivered envelope."""
+    self._section(title, map(_envelope_line, envelopes))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"envelopes"} type={"Iterable[Envelope]"} value={null} />
+<PyParameter name={"title"} type={"str"} value={"'conversation'"} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"skeleton"} type={"(self, envelopes, *, title='skeleton') -> None"}>
+
+Write the sender and label of each envelope on one line.
+
+<PySourceCode >
+
+```python
+def skeleton(
+    self,
+    envelopes: Iterable[Envelope],
+    *,
+    title: str = 'skeleton',
+) -> None:
+    """Write the sender and label of each envelope on one line."""
+    self._section(title, ['  '.join(map(_step, envelopes))])
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"envelopes"} type={"Iterable[Envelope]"} value={null} />
+<PyParameter name={"title"} type={"str"} value={"'skeleton'"} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"duties"} type={"(self, node, *, title='duties') -> None"}>
+
+Write each role's authored message duties.
+
+<PySourceCode >
+
+```python
+def duties(self, node: SessionType, *, title: str = 'duties') -> None:
+    """Write each role's authored message duties."""
+    self._section(title, _duty_lines(node))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"SessionType"} value={null} />
+<PyParameter name={"title"} type={"str"} value={"'duties'"} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"facts"} type={"(self, events, *, title='run facts') -> None"}>
+
+Write counts of signal names in first-seen order.
+
+<PySourceCode >
+
+```python
+def facts(
+    self,
+    events: Iterable[Event],
+    *,
+    title: str = 'run facts',
+) -> None:
+    """Write counts of signal names in first-seen order."""
+    counts = _counted(events)
+    self._section(title, map(_fact_line, counts.items()))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"events"} type={"Iterable[Event]"} value={null} />
+<PyParameter name={"title"} type={"str"} value={"'run facts'"} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"note"} type={"(self, *lines, *, title) -> None"}>
+
+Write prose lines as a titled section.
+
+<PySourceCode >
+
+```python
+def note(self, *lines: str, title: str) -> None:
+    """Write prose lines as a titled section."""
+    self._section(title, lines)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"lines"} type={"str"} value={"()"} />
+<PyParameter name={"title"} type={"str"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"refusing"} type={"(self, expected, *, title) -> Iterator[None]"}>
+
+Report and suppress *expected* errors raised by the body.
+
+<PySourceCode >
+
+```python
+@contextmanager
+def refusing(
+    self,
+    expected: type[Exception],
+    *,
+    title: str,
+) -> Iterator[None]:
+    """Report and suppress *expected* errors raised by the body."""
+    self._console.show(f'=== {title} ===')
+    try:
+        yield
+    except expected as error:
+        self._console.show(f'{type(error).__name__}: {error}')
+        return
+    safe_assert(expr=False, message=f'{title}: expected {expected.__name__}')
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"expected"} type={"type[Exception]"} value={null} />
+<PyParameter name={"title"} type={"str"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"collections.abc.Iterator[None]"} />
+
+</PyFunction>

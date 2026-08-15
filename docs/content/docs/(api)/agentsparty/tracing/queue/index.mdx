@@ -1,0 +1,84 @@
+---
+title: queue
+---
+
+Queue sink and the watch over a running session.
+
+<Tabs items={["Class","Functions"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"QueueTracer"} href={"/docs/agentsparty/tracing/queue/QueueTracer"} />
+<Card title={"Watch"} href={"/docs/agentsparty/tracing/queue/Watch"} />
+
+</Cards>
+
+</Tab>
+<Tab value={"Functions"}>
+
+<PyFunction name={"watching"} type={"(session, tracer) -> AsyncIterator[Watch[R]]"}>
+
+Watch *session* for the length of the block, stopping it on the way out.
+
+Leaving the block early — a ``break``, a client that disconnected, an
+exception — cancels a session that is still running, so no task outlives
+the block that started it and no provider call is left paying for output
+nobody reads. A session that already finished is left alone: there is
+nothing to cancel and ``await watch`` still gives its result.
+
+<PySourceCode >
+
+```python
+@asynccontextmanager
+async def watching(
+    session: Awaitable[R],
+    tracer: QueueTracer,
+) -> AsyncIterator[Watch[R]]:
+    """Watch *session* for the length of the block, stopping it on the way out.
+
+    Leaving the block early — a ``break``, a client that disconnected, an
+    exception — cancels a session that is still running, so no task outlives
+    the block that started it and no provider call is left paying for output
+    nobody reads. A session that already finished is left alone: there is
+    nothing to cancel and ``await watch`` still gives its result.
+
+    Args:
+        session: The awaitable to watch — usually ``runtime.run()``.
+        tracer: The sink *session* was built with.
+
+    Yields:
+        The watch over *session*.
+    """
+    watch = Watch(session, tracer)
+    try:
+        yield watch
+    finally:
+        await watch._stop()
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"session"} type={"Awaitable[R]"} value={undefined}>
+
+The awaitable to watch — usually ``runtime.run()``.
+
+</PyParameter>
+<PyParameter name={"tracer"} type={"QueueTracer"} value={undefined}>
+
+The sink *session* was built with.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"collections.abc.AsyncIterator[agentsparty.tracing.queue.Watch[agentsparty.tracing.queue.R]]"} />
+
+</PyFunction>
+
+</Tab>
+
+</Tabs>

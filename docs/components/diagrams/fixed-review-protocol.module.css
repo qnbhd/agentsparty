@@ -1,0 +1,69 @@
+.root {
+  --diagram-bg: var(--color-fd-card, hsl(0 0% 100%));
+  --diagram-fg: var(--color-fd-card-foreground, var(--color-fd-foreground, hsl(0 6% 10%)));
+  --diagram-muted: var(--color-fd-muted-foreground, hsl(0 0% 40%));
+  --diagram-border: var(--color-fd-border, hsl(0 0% 89%));
+  --diagram-primary: var(--color-fd-primary, hsl(75 75% 24%));
+  --diagram-violet: var(--color-fd-accent-foreground, hsl(75 72% 17%));
+  --diagram-amber: var(--color-fd-ring, hsl(75 60% 42%));
+  --role-researcher: hsl(16 55% 42%);
+  --role-writer: hsl(177 39% 34%);
+  --role-reviewer: hsl(42 65% 35%);
+  --paper: var(--color-fd-background, hsl(0 0% 100%));
+  --panel: var(--diagram-bg);
+  --ink: var(--diagram-fg);
+  --muted: var(--diagram-muted);
+  --line: var(--diagram-border);
+  margin: 1.25rem 0;
+  color: var(--ink);
+  font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
+}
+
+.card {
+  padding: 20px 22px 16px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--panel);
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--ink) 6%, transparent) 1px, transparent 1.4px);
+  background-position: -4px -4px;
+  background-size: 16px 16px;
+}
+
+.head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 6px; }
+.eyebrow { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+.title { margin-top: 2px; font-size: 16px; font-weight: 700; }
+.sub { max-width: 46ch; margin-top: 3px; color: var(--muted); font-size: 12.5px; }
+.mono { font-family: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace; }
+
+.button { display: flex; flex: 0 0 auto; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 600; }
+.button svg { width: 12px; height: 12px; }
+.ruler { display: flex; align-items: center; gap: 8px; margin: 10px 0 4px; color: var(--muted); font-size: 10.5px; }
+.rulerTrack { position: relative; flex: 1; height: 14px; }
+.rulerLine { position: absolute; top: 6px; right: 0; left: 0; height: 1px; background: var(--line); }
+.rulerTick { position: absolute; top: 2px; width: 1px; height: 9px; background: var(--line); }
+.rulerMarker { position: absolute; top: -1px; width: 11px; height: 11px; transform: translateX(-50%); border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 3px var(--paper); }
+.svg { display: block; width: 100%; height: auto; font-family: inherit; }
+.rail { stroke: var(--line); stroke-width: 1.4; }
+.tick { stroke: var(--line); stroke-width: 1; }
+.port rect { fill: var(--panel); }
+.port text { font-family: ui-monospace, monospace; font-size: 13px; font-weight: 700; }
+.role { fill: var(--muted); font-family: ui-sans-serif, sans-serif; font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.messageLabel { font-family: ui-monospace, monospace; font-size: 11.5px; font-weight: 600; }
+.messageType { fill: var(--muted); font-family: ui-monospace, monospace; font-size: 9px; }
+.pulse { filter: drop-shadow(0 0 4px currentColor); }
+.assertion { display: flex; align-items: center; gap: 8px; margin-top: 14px; padding: 9px 12px; transform-origin: top left; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: 11.5px; transition: opacity .4s, transform .4s; }
+.assertion b { color: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; color: var(--muted); font-size: 10.5px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { display: inline-block; width: 16px; height: 2px; }
+.researcher { background: var(--role-researcher); }
+.writer { background: var(--role-writer); }
+.reviewer { background: var(--role-reviewer); }
+.dashed { background: repeating-linear-gradient(90deg, currentColor 0 4px, transparent 4px 7px); }
+
+:global(.dark) .root {
+  --role-researcher: hsl(16 70% 68%);
+  --role-writer: hsl(177 45% 62%);
+  --role-reviewer: hsl(42 75% 68%);
+}

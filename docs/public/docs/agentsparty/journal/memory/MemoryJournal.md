@@ -1,0 +1,97 @@
+# MemoryJournal (/docs/agentsparty/journal/memory/MemoryJournal)
+
+Journal that keeps every decision in memory, in recording order.
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, decisions=()) -> None"}>
+
+Start from *decisions*, empty by default.
+
+Preloading is how a session forks: ``MemoryJournal(script.upto(k).decisions)``
+replays the causal prefix and then goes live.
+
+<PySourceCode >
+
+```python
+def __init__(self, decisions: Iterable[Decision] = ()) -> None:
+    """Start from *decisions*, empty by default.
+
+    Preloading is how a session forks: ``MemoryJournal(script.upto(k).decisions)``
+    replays the causal prefix and then goes live.
+
+    Args:
+        decisions: Decisions to preload (free interleaving across tracks).
+
+    Raises:
+        JournalError: if *decisions* is not a valid multi-track script.
+    """
+    self._script = Script.of(decisions)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"decisions"} type={"Iterable[Decision]"} value={"()"}>
+
+Decisions to preload (free interleaving across tracks).
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"script"} type={"(self) -> Script"}>
+
+Everything decided so far, one word per track.
+
+<PySourceCode >
+
+```python
+def script(self) -> Script:
+    """Everything decided so far, one word per track."""
+    return self._script
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"agentsparty.journal.types.Script"} />
+
+</PyFunction>
+
+<PyFunction name={"append"} type={"(self, decision) -> None"}>
+
+Append *decision* to the recorded list.
+
+<PySourceCode >
+
+```python
+def append(self, decision: Decision) -> None:
+    """Append *decision* to the recorded list.
+
+    Args:
+        decision: The alt to record.
+    """
+    _check_append(self._script, decision)
+    self._script = Script.of((*self._script.decisions, decision))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"decision"} type={"Decision"} value={undefined}>
+
+The alt to record.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

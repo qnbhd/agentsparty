@@ -1,0 +1,58 @@
+# model (/docs/agentsparty/tracing/model/index)
+
+Model seam: wrap a language model so completions land under the ambient span.
+
+<Tabs items={["Class","Functions"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"TracedModel"} href={"/docs/agentsparty/tracing/model/TracedModel"} />
+
+</Cards>
+
+</Tab>
+<Tab value={"Functions"}>
+
+<PyFunction name={"traced"} type={"(model) -> LanguageModel"}>
+
+Wrap *model* so every completion is recorded into the ambient scope.
+
+Outside a traced session the ambient scope discards everything, so a
+wrapped model behaves exactly like the one it wraps.
+
+<PySourceCode >
+
+```python
+def traced(model: LanguageModel) -> LanguageModel:
+    """Wrap *model* so every completion is recorded into the ambient scope.
+
+    Outside a traced session the ambient scope discards everything, so a
+    wrapped model behaves exactly like the one it wraps.
+
+    Args:
+        model: The language model to observe.
+    """
+    return TracedModel(model)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"model"} type={"LanguageModel"} value={undefined}>
+
+The language model to observe.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.llm.types.LanguageModel"} />
+
+</PyFunction>
+
+</Tab>
+
+</Tabs>

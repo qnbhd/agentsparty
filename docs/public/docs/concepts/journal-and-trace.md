@@ -1,0 +1,136 @@
+# Journal and trace (/docs/concepts/journal-and-trace)
+
+# Journal and trace
+
+A journal stores authored decisions so a later run can restore them. A
+tracer records events so you can inspect what happened. They travel as
+separate arguments to `run_sync`.
+
+| | Journal | Trace |
+| --- | --- | --- |
+| Purpose | Persist decisions for resume | Observe what happened |
+| Consumer | Runtime on a later run | Operators, tests, UIs |
+| Types | [[agentsparty.journal.types.Journal]] | [[agentsparty.tracing.types.Tracer]] |
+
+## Resume
+
+The journal records the alts that cost a model call or a tool call. On
+resume, those decisions are recalled and the paid work is skipped. External
+side effects that are not represented by a journaled decision stay an
+application concern.
+
+`MemoryJournal` is for tests; `JsonlJournal` and `SqliteJournal` persist to
+disk.
+
+```python exec
+from agentsparty.journal import MemoryJournal
+from agentsparty.machine import machine
+from agentsparty.participant import says
+from agentsparty.protocol import Text, msg
+from agentsparty.kernel.role import roles
+from agentsparty.runtime import Cast
+
+A, B = roles('A', 'B')
+Note = Text('Note')
+protocol = msg[A, B](Note)
+journal = MemoryJournal()
+(
+    Cast(protocol)
+    .play(A, machine(lambda view: says(Note, 'durable')))
+    .play(B, machine(lambda view: None))
+    .run_sync(journal=journal)
+)
+replay = MemoryJournal(journal.script().decisions)
+trace = (
+    Cast(protocol)
+    .play(A, machine(lambda view: says(Note, 'ignored')))
+    .play(B, machine(lambda view: None))
+    .run_sync(journal=replay)
+)
+print(trace[0].payload, len(journal.script().decisions))
+```
+
+An OpenAI-backed run uses the same `journal=` argument:
+
+```python compile
+from pathlib import Path
+
+from openai import AsyncOpenAI
+from agentsparty.agent import agent
+from agentsparty.journal import JsonlJournal
+from agentsparty import OpenAIModel
+from agentsparty.protocol import Text, msg
+from agentsparty.kernel.role import roles
+from agentsparty.runtime import Cast
+
+Writer, Reader = roles('Writer', 'Reader')
+protocol = msg[Writer, Reader](Text('Note')).close()
+model = OpenAIModel('gpt-5.6-luna', AsyncOpenAI(max_retries=0, timeout=30.0))
+journal = JsonlJournal(Path('session.jsonl'), protocol)
+trace = (
+    Cast(protocol)
+    .play(Writer, agent(model, 'Send a concise note.'))
+    .play(Reader, agent(model, 'Receive the note.'))
+    .run_sync(journal=journal)
+)
+print(trace[0].label.name, len(journal.script().decisions))
+```
+
+The complete step is `docs/examples/tutorial/04_durable_session.py`.
+
+## Observation
+
+A tracer records events without steering the run. `StreamTracer` delivers
+them as they occur; `MemoryTracer` collects them for assertions. Events
+carry a facet — runtime, protocol, model, tool — so you can ask which layer
+explains the latency or the failure. `debug.Report` prints a protocol, a
+conversation, or counted facts to a `Console`.
+
+```python exec
+from agentsparty.machine import machine
+from agentsparty.participant import says
+from agentsparty.protocol import Text, msg
+from agentsparty.kernel.role import roles
+from agentsparty.runtime import Cast
+from agentsparty.tracing import MemoryTracer
+
+A, B = roles('A', 'B')
+Note = Text('Note')
+protocol = msg[A, B](Note)
+tracer = MemoryTracer()
+(
+    Cast(protocol)
+    .play(A, machine(lambda view: says(Note, 'hi')))
+    .play(B, machine(lambda view: None))
+    .run_sync(tracer=tracer)
+)
+print(len(tracer.events))
+```
+
+```python compile
+from openai import AsyncOpenAI
+from agentsparty.agent import agent
+from agentsparty import OpenAIModel
+from agentsparty.protocol import Text, msg
+from agentsparty.kernel.role import roles
+from agentsparty.runtime import Cast
+from agentsparty.tracing import MemoryTracer
+
+Writer, Reader = roles('Writer', 'Reader')
+protocol = msg[Writer, Reader](Text('Note'))
+model = OpenAIModel('gpt-5.6-luna', AsyncOpenAI(max_retries=0, timeout=30.0))
+tracer = MemoryTracer()
+(
+    Cast(protocol)
+    .play(Writer, agent(model, 'Send a concise note.'))
+    .play(Reader, agent(model, 'Receive the note.'))
+    .run_sync(tracer=tracer)
+)
+print(len(tracer.events))
+```
+
+The complete step is `docs/examples/tutorial/05_observable_session.py`.
+See
+[[agentsparty.journal.memory.MemoryJournal]],
+[[agentsparty.tracing.memory.MemoryTracer]], and [[agentsparty.debug.Report]].
+

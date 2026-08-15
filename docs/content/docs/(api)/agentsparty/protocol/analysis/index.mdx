@@ -1,0 +1,69 @@
+---
+title: analysis
+---
+
+Static analysis of projected endpoint protocols and their duties.
+
+<Tabs items={["Class","Functions"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"Duty"} href={"/docs/agentsparty/protocol/analysis/Duty"} />
+
+</Cards>
+
+</Tab>
+<Tab value={"Functions"}>
+
+<PyFunction name={"duties"} type={"(node) -> tuple[Duty, ...]"}>
+
+Everything *node* may be asked to author, in order of first appearance.
+
+Reads only the internal alts ([`EndpointSelect`](/docs/agentsparty/protocol/language/endpoint/EndpointSelect)):
+what the role receives is not a duty. Repeats are collapsed, so a message
+a recursive protocol asks for on every turn is listed once.
+
+<PySourceCode >
+
+```python
+def duties(node: EndpointType) -> tuple[Duty, ...]:
+    """Everything *node* may be asked to author, in order of first appearance.
+
+    Reads only the internal alts (:class:`~agentsparty.protocol.language.endpoint.EndpointSelect`):
+    what the role receives is not a duty. Repeats are collapsed, so a message
+    a recursive protocol asks for on every turn is listed once.
+
+    Args:
+        node: A projected endpoint protocol, e.g. ``project(proto, Architect)``.
+
+    Returns:
+        One entry per distinct message this role authors.
+    """
+    return tuple(dict.fromkeys(_duties(node)))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"node"} type={"EndpointType"} value={undefined}>
+
+A projected endpoint protocol, e.g. ``project(proto, Architect)``.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"tuple"}>
+
+One entry per distinct message this role authors.
+
+</PyFunctionReturn>
+
+</PyFunction>
+
+</Tab>
+
+</Tabs>

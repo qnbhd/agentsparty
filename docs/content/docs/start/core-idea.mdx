@@ -1,0 +1,132 @@
+---
+title: 💡 Core Idea
+description: How a fixed global protocol makes multi-agent interactions verifiable.
+journey: evaluate
+status: stable
+---
+
+> A declarative, fixed protocol is a verifiable artifact. It rules out structurally
+> invalid interactions before execution and defines the communication contract for
+> the entire system. Projection derives the contract of each role from that shared
+> protocol.
+
+A protocol records participants, message direction, order, branches, recursion, and
+termination in one value. `agentsparty` can inspect it before constructing a runtime or
+calling a model. Each endpoint retains one role's visible actions and obligations.
+
+## A fixed review protocol
+
+Consider a review pipeline with three roles. The Researcher supplies findings, the
+Writer turns them into a draft, and the Reviewer returns feedback. The Writer then
+submits a revision and receives the final approval.
+
+```python compile
+import agentsparty as pa
+from agentsparty.protocol import msg, project_all, seq
+
+Researcher, Writer, Reviewer = pa.roles('Researcher', 'Writer', 'Reviewer')
+
+protocol = seq(
+    msg[Researcher, Writer](pa.Text('Findings')),
+    msg[Writer, Reviewer](pa.Text('Draft')),
+    msg[Reviewer, Writer](pa.Text('Feedback')),
+    msg[Writer, Reviewer](pa.Text('Revision')),
+    msg[Reviewer, Writer](pa.Nothing('Approval')),
+).close()
+
+endpoints = project_all(protocol)
+assert [role.name for role, _ in endpoints] == [
+    'Researcher',
+    'Writer',
+    'Reviewer',
+]
+```
+
+The order is part of the protocol. A participant receives a structured request only
+when its next declared action becomes active. Labels and payload codecs also come
+from the protocol, so an agent selects among declared continuations and supplies the
+content required by the selected message.
+
+<FixedReviewProtocol />
+
+Projection produces three endpoint views from the same value. The Researcher sees
+one send, the Writer sees its receive/send sequence, and the Reviewer sees the dual
+sequence. Reviewing the global protocol and reviewing any one role therefore use
+two views of the same communication contract.
+
+## What the protocol provides
+
+### One reviewable source of interaction structure
+
+The message topology can be rendered, projected, compared in tests, and checked into
+version control. Changes to order or ownership appear as protocol changes instead
+of remaining distributed across prompts, callbacks, and mutable state.
+
+Role projection scales this representation without duplicating specifications. A
+participant receives only its endpoint contract, while the global protocol remains
+the authority for the session as a whole.
+
+### Missing branch knowledge is rejected
+
+A role must distinguish every branch that changes its next action. In the protocol
+below, the Reviewer chooses `Approve` or `Revise` toward the Writer. The Researcher
+observes neither choice, yet approval requires it to receive while revision requires
+it to send. `project(broken_choice, Researcher)` raises `ProjectionError` before a
+runtime exists.
+
+```python compile
+from agentsparty.protocol import alt, msg, project
+
+broken_choice = alt[Reviewer, Writer](
+    pa.Nothing('Approve') >> msg[Writer, Researcher](pa.Text('Publish')),
+    pa.Nothing('Revise') >> msg[Researcher, Writer](pa.Text('MoreResearch')),
+).close()
+
+try:
+    project(broken_choice, Researcher)
+except pa.ProjectionError as error:
+    assert 'cannot tell the branches' in str(error)
+```
+
+The error identifies the blind role, the branch labels, and the conflicting duties.
+The repair is explicit communication of the selected branch to every role whose
+continuation depends on it.
+
+### Conflicting parallel ownership is rejected
+
+Parallel composition requires disjoint role sets. Giving the Researcher ownership
+of two concurrent branches creates competing next actions for the same participant.
+Construction raises `ValueError`, so the ambiguous schedule never reaches an agent.
+
+```python compile
+from agentsparty.protocol import par
+
+try:
+    par(
+        msg[Researcher, Writer](pa.Text('Findings')),
+        msg[Researcher, Reviewer](pa.Text('Context')),
+    ).close()
+except ValueError as error:
+    assert 'both mention role Researcher' in str(error)
+```
+
+This restriction gives every parallel branch clear ownership. Protocol authors can
+express fan-out as an ordered sequence or redesign the roles so that concurrent
+branches have independent participants.
+
+## Conclusions
+
+A fixed global protocol makes the permitted interaction finite, explicit, and
+inspectable. Projection connects that system-level specification to each role, and
+partial operations such as projection and parallel construction expose structural
+contradictions before model calls, tool effects, or paid execution begin.
+
+The checks cover communication structure: roles, direction, order, branch
+knowledge, and declared payload codecs. Semantic quality remains the responsibility
+of models, tools, domain validation, and human review.
+
+## Where to next?
+
+Build a protocol in the [quickstart](/docs/start/quickstart), examine how
+[projection](/docs/concepts/projection) derives endpoint contracts, then study
+[knowledge of alt](/docs/concepts/knowledge-of-alt) for branch repair patterns.

@@ -1,0 +1,7 @@
+# Casting (/docs/agentsparty/runtime/Casting)
+
+Factory that binds a role to a participant given its projected endpoint.
+
+The type of the second argument to `play`. Implemented by the
+factories in [`agent`](/docs/agentsparty/agent), [`human`](/docs/agentsparty/human), [`machine`](/docs/agentsparty/machine),
+and [`toolbox`](/docs/agentsparty/toolbox).

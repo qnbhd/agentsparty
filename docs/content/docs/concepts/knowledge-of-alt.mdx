@@ -1,0 +1,138 @@
+---
+title: Knowledge of alt
+icon: Eye
+description: Projection rejects a role that would need to react to an unseen branch.
+aliases:
+  - ProjectionError
+  - blind branch
+journey: concepts
+status: stable
+---
+
+# Knowledge of alt
+
+When a alt changes what a role must do next, that role has to observe the
+choice. `project` checks this before any participant is bound.
+
+## The blind protocol
+
+`A` chooses `Yes` or `No` toward `B`, and the branches give `C` opposite
+duties. Switch branches below; add the missing signal to see it merge.
+
+```python exec
+from agentsparty.kernel.errors import ProjectionError
+from agentsparty.protocol import Nothing, Text, alt, msg, project
+from agentsparty.kernel.role import roles
+
+A, B, C = roles('A', 'B', 'C')
+broken = alt[A, B](
+    Nothing('Yes') >> msg[A, C]('Y', Text),
+    Nothing('No') >> msg[C, A]('N', Text),
+).close()
+
+try:
+    project(broken, C)
+except ProjectionError as error:
+    print(type(error).__name__)
+```
+
+The refusal is about `C`'s two duties, not about the payloads. Toggle the
+scenes: with no branch signal `C` sends on one branch and receives on the
+other; once every branch carries a message to the blind role, both duties
+become the same receive and the endpoint merges.
+
+<BlindChoiceWidget />
+
+The refusal names the blind role and the two duties it cannot reconcile —
+each phrase points at the part of the tree it is talking about:
+
+<ProjectionErrorMap />
+
+A send-or-receive union would only move the guess into `C`.
+
+## Make the branch observable
+
+Send a branch-specific message to every role whose continuation differs —
+the business payload or a small control label. In the approval workflow both
+outcomes come from the same Writer: `Final` after approval, `Rejected` after
+rejection.
+
+```python exec
+from agentsparty.protocol import Nothing, Text, alt, msg, project_all, render
+from agentsparty.kernel.role import roles
+
+Writer, Reviewer, Reader = roles('Writer', 'Reviewer', 'Reader')
+Draft = Text('Draft')
+ApproveLabel = Nothing('Approve')
+RejectLabel = Nothing('Reject')
+Approve = ApproveLabel >> msg[Writer, Reader](Text('Final'))
+Reject = RejectLabel >> msg[Writer, Reader](Text('Rejected'))
+protocol = msg[Writer, Reviewer](Draft) >> alt[Reviewer, Writer](
+    Approve, Reject
+)
+print(render(protocol))
+```
+
+Reader now receives from Writer on either branch, so its endpoint merges:
+
+```python exec
+from agentsparty.protocol import Nothing, Text, alt, msg, project_all, render
+from agentsparty.kernel.role import roles
+
+Writer, Reviewer, Reader = roles('Writer', 'Reviewer', 'Reader')
+Draft = Text('Draft')
+ApproveLabel = Nothing('Approve')
+RejectLabel = Nothing('Reject')
+Approve = ApproveLabel >> msg[Writer, Reader](Text('Final'))
+Reject = RejectLabel >> msg[Writer, Reader](Text('Rejected'))
+protocol = msg[Writer, Reviewer](Draft) >> alt[Reviewer, Writer](
+    Approve, Reject
+)
+for role, endpoint in project_all(protocol):
+    print(role.name)
+    print(render(endpoint))
+```
+
+## Run the full workflow
+
+```python compile
+from openai import AsyncOpenAI
+
+from agentsparty.agent import agent
+from agentsparty.human import human, script
+from agentsparty import OpenAIModel
+from agentsparty.participant import says
+from agentsparty.protocol import Nothing, Text, alt, msg
+from agentsparty.kernel.role import roles
+from agentsparty.runtime import Cast
+
+Writer, Reviewer, Reader = roles('Writer', 'Reviewer', 'Reader')
+Draft = Text('Draft')
+ApproveLabel = Nothing('Approve')
+RejectLabel = Nothing('Reject')
+Approve = ApproveLabel >> msg[Writer, Reader](Text('Final'))
+Reject = RejectLabel >> msg[Writer, Reader](Text('Rejected'))
+protocol = msg[Writer, Reviewer](Draft) >> alt[Reviewer, Writer](
+    Approve, Reject
+)
+model = OpenAIModel('gpt-5.6-luna', AsyncOpenAI(max_retries=0, timeout=30.0))
+trace = (
+    Cast(protocol)
+    .play(Writer, agent(model, 'Draft then send the branch result.'))
+    .play(Reviewer, human(script(says(ApproveLabel))))
+    .play(Reader, human(script()))
+    .run_sync()
+)
+assert [event.label.name for event in trace] == ['Draft', 'Approve', 'Final']
+print([event.label.name for event in trace])
+```
+
+The whole file is `docs/examples/tutorial/01_approval_workflow.py`. Remove
+the `Rejected` message and projection raises again, before a live run can
+spend tokens.
+
+The check is structural: it neither asks a model to infer the missing branch
+nor waits for a trace that may never reach the failing path.
+
+See [Projection](/docs/concepts/projection) and
+[[agentsparty.kernel.errors.ProjectionError]].

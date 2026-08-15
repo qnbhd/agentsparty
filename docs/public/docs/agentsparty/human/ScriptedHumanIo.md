@@ -1,0 +1,231 @@
+# ScriptedHumanIo (/docs/agentsparty/human/ScriptedHumanIo)
+
+Predetermined alts for tests and non-interactive demos.
+
+## Attributes
+
+<PyAttribute name={"notifications"} type={"list[Envelope]"} value={"[]"} />
+
+<PyAttribute name={"recollections"} type={"list[Envelope]"} value={"[]"} />
+
+<PyAttribute name={"cancellations"} type={"list[Cancelled]"} value={"[]"} />
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, alts) -> None"}>
+
+Preload *alts*, consumed in order.
+
+<PySourceCode >
+
+```python
+def __init__(self, alts: Sequence[Choice]) -> None:
+    """Preload *alts*, consumed in order.
+
+    Args:
+        alts: The scripted alts to return one at a time.
+    """
+    self._alts = list(alts)
+    self.notifications: list[Envelope] = []
+    self.recollections: list[Envelope] = []
+    self.cancellations: list[Cancelled] = []
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"alts"} type={"Sequence[Choice]"} value={undefined}>
+
+The scripted alts to return one at a time.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"choose"} type={"(self, subject, receiver, branches) -> Chosen[B]"}>
+
+Return the next scripted alt, or raise when exhausted.
+
+<PySourceCode >
+
+```python
+async def choose(
+    self,
+    subject: Role,
+    receiver: Role,
+    branches: NonEmptyMap[Label, B],
+) -> Chosen[B]:
+    """Return the next scripted alt, or raise when exhausted.
+
+    Args:
+        subject: The human's own role.
+        receiver: The role that will receive the chosen message.
+        branches: The labelled alts offered to the human.
+
+    Returns:
+        The scripted alt decoded against the offered branches.
+    """
+    offered = branches
+    if not self._alts:
+        labels = ', '.join(str(b.label) for b in offered.values())
+        raise SelectionError(
+            f'ScriptedHumanIo exhausted; still need a alt for '
+            f'{receiver.name} (offered: {labels})',
+        )
+    alt = self._alts.pop(0)
+    branch = chosen_branch(offered, alt.label)
+    return Chosen(
+        branch=branch,
+        payload=branch.payload.decode(alt.payload),
+        raw=alt.payload,
+    )
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"subject"} type={"Role"} value={undefined}>
+
+The human's own role.
+
+</PyParameter>
+<PyParameter name={"receiver"} type={"Role"} value={undefined}>
+
+The role that will receive the chosen message.
+
+</PyParameter>
+<PyParameter name={"branches"} type={"NonEmptyMap[Label, B]"} value={undefined}>
+
+The labelled alts offered to the human.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Chosen"}>
+
+The scripted alt decoded against the offered branches.
+
+</PyFunctionReturn>
+
+</PyFunction>
+
+<PyFunction name={"notify"} type={"(self, subject, envelope) -> None"}>
+
+Append *envelope* to the ``notifications`` list.
+
+<PySourceCode >
+
+```python
+async def notify(self, subject: Role, envelope: Envelope) -> None:
+    """Append *envelope* to the ``notifications`` list.
+
+    Args:
+        subject: The human's own role.
+        envelope: The protocol message being delivered.
+    """
+    self.notifications.append(envelope)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"subject"} type={"Role"} value={undefined}>
+
+The human's own role.
+
+</PyParameter>
+<PyParameter name={"envelope"} type={"Envelope"} value={undefined}>
+
+The protocol message being delivered.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"recall"} type={"(self, subject, envelope) -> None"}>
+
+Append *envelope* to the ``recollections`` list.
+
+<PySourceCode >
+
+```python
+async def recall(self, subject: Role, envelope: Envelope) -> None:
+    """Append *envelope* to the ``recollections`` list.
+
+    Args:
+        subject: The human's own role.
+        envelope: The protocol message they sent earlier.
+    """
+    self.recollections.append(envelope)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"subject"} type={"Role"} value={undefined}>
+
+The human's own role.
+
+</PyParameter>
+<PyParameter name={"envelope"} type={"Envelope"} value={undefined}>
+
+The protocol message they sent earlier.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"cancel"} type={"(self, subject, notice) -> None"}>
+
+Append *notice* to the ``cancellations`` list.
+
+<PySourceCode >
+
+```python
+async def cancel(self, subject: Role, notice: Cancelled) -> None:
+    """Append *notice* to the ``cancellations`` list.
+
+    Args:
+        subject: The human's own role.
+        notice: Why the session was rolled up.
+    """
+    self.cancellations.append(notice)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"subject"} type={"Role"} value={undefined}>
+
+The human's own role.
+
+</PyParameter>
+<PyParameter name={"notice"} type={"Cancelled"} value={undefined}>
+
+Why the session was rolled up.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

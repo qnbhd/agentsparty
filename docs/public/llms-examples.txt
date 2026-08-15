@@ -1,0 +1,59 @@
+# agentsparty
+> Protocol-first orchestration for AI agents
+
+Generated: 2026-08-15 · package 0.1.0 · commit 514ed7a
+
+
+## Verified in CI (offline)
+
+- examples/offline/cancellation.py · `uv run python examples/offline/cancellation.py`
+- examples/offline/chain_chor.py · `uv run python examples/offline/chain_chor.py`
+- examples/offline/hello_chor.py · `uv run python examples/offline/hello_chor.py`
+- examples/offline/parallel_chor.py · `uv run python examples/offline/parallel_chor.py`
+- examples/offline/projection_error.py · `uv run python examples/offline/projection_error.py`
+- examples/offline/resume.py · `uv run python examples/offline/resume.py`
+- examples/offline/revise_until_ok.py · `uv run python examples/offline/revise_until_ok.py`
+- examples/offline/revise_until_ok_chor.py · `uv run python examples/offline/revise_until_ok_chor.py`
+- examples/offline/times_chor.py · `uv run python examples/offline/times_chor.py`
+- examples/offline/toolbox.py · `uv run python examples/offline/toolbox.py`
+- examples/offline/triage_inbox.py · `uv run python examples/offline/triage_inbox.py`
+
+## Showcase (online, not verified in CI)
+
+- examples/coding_agent.py · `uv run python examples/coding_agent.py`
+- examples/coding_agent_pro.py · `uv run python examples/coding_agent_pro.py`
+- examples/online/brief_pack.py · `uv run python examples/online/brief_pack.py`
+- examples/online/build_and_qa.py · `uv run python examples/online/build_and_qa.py`
+- examples/online/campaign.py · `uv run python examples/online/campaign.py`
+- examples/online/evaluation.py · `uv run python examples/online/evaluation.py`
+- examples/online/gate_and_transform.py · `uv run python examples/online/gate_and_transform.py`
+- examples/online/guide.py · `uv run python examples/online/guide.py`
+- examples/online/hello.py · `uv run python examples/online/hello.py`
+- examples/online/instagram_post.py · `uv run python examples/online/instagram_post.py`
+- examples/online/job_posting.py · `uv run python examples/online/job_posting.py`
+- examples/online/landing_page.py · `uv run python examples/online/landing_page.py`
+- examples/online/lint_and_fix.py · `uv run python examples/online/lint_and_fix.py`
+- examples/online/main.py · `uv run python examples/online/main.py`
+- examples/online/match_profile.py · `uv run python examples/online/match_profile.py`
+- examples/online/meeting_actions.py · `uv run python examples/online/meeting_actions.py`
+- examples/online/model_composition.py · `uv run python examples/online/model_composition.py`
+- examples/online/providers.py · `uv run python examples/online/providers.py`
+- examples/online/quickstart.py · `uv run python examples/online/quickstart.py`
+- examples/online/recruitment.py · `uv run python examples/online/recruitment.py`
+- examples/online/retrieval_qa.py · `uv run python examples/online/retrieval_qa.py`
+- examples/online/score_leads.py · `uv run python examples/online/score_leads.py`
+- examples/online/scribe.py · `uv run python examples/online/scribe.py`
+- examples/online/starter.py · `uv run python examples/online/starter.py`
+- examples/online/stock_analysis.py · `uv run python examples/online/stock_analysis.py`
+- examples/online/surprise_trip.py · `uv run python examples/online/surprise_trip.py`
+- examples/online/trip.py · `uv run python examples/online/trip.py`
+- examples/online/write_a_book.py · `uv run python examples/online/write_a_book.py`
+
+## Tutorial files
+
+- docs/examples/canonical/offline_quickstart.py
+- docs/examples/tutorial/01_approval_workflow.py
+- docs/examples/tutorial/02_typed_payloads.py
+- docs/examples/tutorial/03_human_review.py
+- docs/examples/tutorial/04_durable_session.py
+- docs/examples/tutorial/05_observable_session.py

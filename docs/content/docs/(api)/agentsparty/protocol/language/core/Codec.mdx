@@ -1,0 +1,192 @@
+---
+title: Codec
+---
+
+Everything the protocol knows about a branch payload — as data.
+
+``decode`` must be pure: journalled sessions replay a payload by decoding
+the raw form again, and that has to yield the same value.
+
+## Attributes
+
+<PyAttribute name={"name"} type={"str"} value={null} />
+
+<PyAttribute name={"schema"} type={"Mapping[str, object]"} value={null} />
+
+<PyAttribute name={"decode"} type={"Callable[[RawValue], T_co]"} value={null} />
+
+<PyAttribute name={"carries_value"} type={"bool"} value={"True"} />
+
+## Functions
+
+<PyFunction name={"many"} type={"(self, at_least=None, at_most=None) -> Codec[list[T_co]]"}>
+
+A list of this codec's values, optionally bounded in length.
+
+<PySourceCode >
+
+```python
+def many(
+    self,
+    at_least: int | None = None,
+    at_most: int | None = None,
+) -> Codec[list[T_co]]:
+    """A list of this codec's values, optionally bounded in length."""
+    if at_least is not None:
+        require_nonnegative('at_least', at_least)
+    if at_most is not None:
+        require_nonnegative('at_most', at_most)
+    if at_least is not None and at_most is not None:
+        safe_assert(expr=at_least <= at_most, message='at_least must not exceed at_most')
+    codec = list_of(self)
+    if at_least is None and at_most is None:
+        return codec
+    requirement = _size_requirement(at_least, at_most)
+    return refine(codec, requirement, partial(_has_size, at_least, at_most))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"at_least"} type={"int | None"} value={"None"} />
+<PyParameter name={"at_most"} type={"int | None"} value={"None"} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Codec[list[agentsparty.protocol.language.core.T_co]]"} />
+
+</PyFunction>
+
+<PyFunction name={"mapping"} type={"(self) -> Codec[dict[str, T_co]]"}>
+
+A string-keyed mapping of this codec's values.
+
+<PySourceCode >
+
+```python
+def mapping(self) -> Codec[dict[str, T_co]]:
+    """A string-keyed mapping of this codec's values."""
+    return dict_of(self)
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Codec[dict[str, agentsparty.protocol.language.core.T_co]]"} />
+
+</PyFunction>
+
+<PyFunction name={"between"} type={"(self, low, high) -> Codec[T_co]"}>
+
+Values of this codec that lie in the closed range ``[low, high]``.
+
+<PySourceCode >
+
+```python
+def between(self, low: float, high: float) -> Codec[T_co]:
+    """Values of this codec that lie in the closed range ``[low, high]``."""
+    safe_assert(expr=low <= high, message='low must not exceed high')
+    requirement = _range_requirement(low, high)
+    holds = partial(_in_range, low, high)
+    return refine(self, requirement, holds)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"low"} type={"float"} value={null} />
+<PyParameter name={"high"} type={"float"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Codec[agentsparty.protocol.language.core.T_co]"} />
+
+</PyFunction>
+
+<PyFunction name={"having"} type={"(self, first, *rest) -> Codec[T_co]"}>
+
+Objects of this codec that carry at least the named keys.
+
+<PySourceCode >
+
+```python
+def having(self, first: str, /, *rest: str) -> Codec[T_co]:
+    """Objects of this codec that carry at least the named keys."""
+    keys = (first, *rest)
+    safe_assert(expr=all(key.strip() for key in keys), message='keys must not be blank')
+    requirement = 'carries {}'.format(', '.join(keys))
+    holds = partial(_carries, keys)
+    return refine(self, requirement, holds)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"first"} type={"str"} value={null} />
+<PyParameter name={"rest"} type={"str"} value={"()"} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Codec[agentsparty.protocol.language.core.T_co]"} />
+
+</PyFunction>
+
+<PyFunction name={"where"} type={"(self, requirement, holds) -> Codec[T_co]"}>
+
+Values of this codec satisfying *holds*.
+
+<PySourceCode >
+
+```python
+def where(self, requirement: str, holds: Callable[[T_co], bool]) -> Codec[T_co]:
+    """Values of this codec satisfying *holds*."""
+    return refine(self, requirement, holds)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"requirement"} type={"str"} value={null} />
+<PyParameter name={"holds"} type={"Callable[[T_co], bool]"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Codec[agentsparty.protocol.language.core.T_co]"} />
+
+</PyFunction>
+
+<PyFunction name={"optional"} type={"(self) -> Codec[T_co | None]"}>
+
+Values of this codec or JSON ``null``.
+
+<PySourceCode >
+
+```python
+def optional(self) -> Codec[T_co | None]:
+    """Values of this codec or JSON ``null``."""
+    return optional(self)
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Codec[agentsparty.protocol.language.core.T_co | None]"} />
+
+</PyFunction>
+
+<PyFunction name={"__init__"} type={"(self, name, schema, decode, carries_value=True) -> None"}>
+
+<div >
+
+<PyParameter name={"name"} type={"str"} value={null} />
+<PyParameter name={"schema"} type={"Mapping[str, object]"} value={null} />
+<PyParameter name={"decode"} type={"Callable[[RawValue], T_co]"} value={null} />
+<PyParameter name={"carries_value"} type={"bool"} value={"True"} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

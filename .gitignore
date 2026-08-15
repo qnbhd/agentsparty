@@ -1,0 +1,54 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+unrs/target
+
+# Coverage
+htmlcov/
+.coverage
+coverage.json
+coverage.xml
+
+# Tool caches
+.nox/
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
+.ruff_cache/
+
+# Built docs
+docs/node_modules/
+docs/.next/
+docs/out/
+docs/.source/
+*.tsbuildinfo
+
+# Griffe intermediate for `npm run docs:generate`; its outputs under
+# docs/content/docs/(api) and docs/public are committed, this is not.
+docs/agentsparty.json
+
+mutants/
+
+# Journal artifacts
+*.jsonl
+*.db
+*.db-shm
+*.db-wal
+
+# Vendored third-party documentation and papers — kept locally, never committed
+agents-feature.md
+models-features.md
+streaming-feature.md
+tasks-feature.md
+research/
+sessions.db
+.env
+.next
+.playwright-mcp

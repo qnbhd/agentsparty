@@ -1,0 +1,56 @@
+---
+title: NoJournal
+---
+
+Journal that records nothing; the runtime default.
+
+## Functions
+
+<PyFunction name={"script"} type={"(self) -> Script"}>
+
+Return the empty script: nothing was ever recorded.
+
+<PySourceCode >
+
+```python
+def script(self) -> Script:
+    """Return the empty script: nothing was ever recorded."""
+    return EMPTY_SCRIPT
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"agentsparty.journal.types.Script"} />
+
+</PyFunction>
+
+<PyFunction name={"append"} type={"(self, decision) -> None"}>
+
+Discard *decision*.
+
+<PySourceCode >
+
+```python
+def append(self, decision: Decision) -> None:
+    """Discard *decision*.
+
+    Args:
+        decision: The alt to discard.
+    """
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"decision"} type={"Decision"} value={undefined}>
+
+The alt to discard.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

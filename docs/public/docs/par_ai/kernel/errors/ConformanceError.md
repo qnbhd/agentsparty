@@ -1,0 +1,8 @@
+# ConformanceError (/docs/agentsparty/kernel/errors/ConformanceError)
+
+Raised when a participant's declared endpoint type does not fit its role.
+
+Sibling of `ProjectionError` with one difference: a projection error
+says the *choreography* is malformed, this one says the *participant* was
+wired to a role it cannot play. It is raised from a constructor, about an
+argument, which is why it is a ``ValueError``.

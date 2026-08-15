@@ -1,0 +1,215 @@
+---
+title: CliHumanIo
+---
+
+Interactive Human IO over a Console; role is an argument, not state.
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, console=None) -> None"}>
+
+Create an interactive IO over *console* (defaults to process stdio).
+
+<PySourceCode >
+
+```python
+def __init__(self, console: Console | None = None) -> None:
+    """Create an interactive IO over *console* (defaults to process stdio).
+
+    Args:
+        console: The console to prompt on; ``StreamConsole`` when omitted.
+    """
+    self._console: Console = StreamConsole() if console is None else console
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"console"} type={"Console | None"} value={"None"}>
+
+The console to prompt on; ``StreamConsole`` when omitted.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"choose"} type={"(self, subject, receiver, branches) -> Chosen[B]"}>
+
+Prompt the human for a branch and payload over the console.
+
+<PySourceCode >
+
+```python
+async def choose(
+    self,
+    subject: Role,
+    receiver: Role,
+    branches: NonEmptyMap[Label, B],
+) -> Chosen[B]:
+    """Prompt the human for a branch and payload over the console.
+
+    Args:
+        subject: The human's own role.
+        receiver: The role that will receive the chosen message.
+        branches: The labelled alts offered to the human.
+
+    Returns:
+        The chosen branch together with its decoded payload.
+    """
+    menu = _Menu.of(branches)
+    self._console.show(menu.render(subject.name, receiver))
+    while True:
+        chosen, error = await self._attempt_or_error(menu)
+        if chosen is not None:
+            return chosen
+        self._console.show(f'error: {error}')
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"subject"} type={"Role"} value={undefined}>
+
+The human's own role.
+
+</PyParameter>
+<PyParameter name={"receiver"} type={"Role"} value={undefined}>
+
+The role that will receive the chosen message.
+
+</PyParameter>
+<PyParameter name={"branches"} type={"NonEmptyMap[Label, B]"} value={undefined}>
+
+The labelled alts offered to the human.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Chosen"}>
+
+The chosen branch together with its decoded payload.
+
+</PyFunctionReturn>
+
+</PyFunction>
+
+<PyFunction name={"notify"} type={"(self, subject, envelope) -> None"}>
+
+Print *envelope* to the console.
+
+<PySourceCode >
+
+```python
+async def notify(self, subject: Role, envelope: Envelope) -> None:
+    """Print *envelope* to the console.
+
+    Args:
+        subject: The human's own role.
+        envelope: The protocol message being delivered.
+    """
+    self._console.show(_render_envelope(subject.name, envelope))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"subject"} type={"Role"} value={undefined}>
+
+The human's own role.
+
+</PyParameter>
+<PyParameter name={"envelope"} type={"Envelope"} value={undefined}>
+
+The protocol message being delivered.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"recall"} type={"(self, subject, envelope) -> None"}>
+
+Print a message this human sent in an earlier process.
+
+<PySourceCode >
+
+```python
+async def recall(self, subject: Role, envelope: Envelope) -> None:
+    """Print a message this human sent in an earlier process.
+
+    Args:
+        subject: The human's own role.
+        envelope: The protocol message they sent earlier.
+    """
+    self._console.show(_render_sent(subject.name, envelope))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"subject"} type={"Role"} value={undefined}>
+
+The human's own role.
+
+</PyParameter>
+<PyParameter name={"envelope"} type={"Envelope"} value={undefined}>
+
+The protocol message they sent earlier.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"cancel"} type={"(self, subject, notice) -> None"}>
+
+Print that the session ended, and why.
+
+<PySourceCode >
+
+```python
+async def cancel(self, subject: Role, notice: Cancelled) -> None:
+    """Print that the session ended, and why.
+
+    Args:
+        subject: The human's own role.
+        notice: Why the session was rolled up.
+    """
+    self._console.show(f'[{subject.name}] session ended: {notice.reason}')
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"subject"} type={"Role"} value={undefined}>
+
+The human's own role.
+
+</PyParameter>
+<PyParameter name={"notice"} type={"Cancelled"} value={undefined}>
+
+Why the session was rolled up.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

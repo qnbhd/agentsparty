@@ -1,0 +1,47 @@
+# LanguageModel (/docs/agentsparty/llm/types/LanguageModel)
+
+A chat model that answers with JSON matching a requested schema.
+
+Schemas are built and payloads are validated by the protocol layer, so an
+implementation only carries the request to a provider, translates the
+provider's failures into [`ModelError`](/docs/agentsparty/kernel/errors/ModelError), and returns
+what it got back.
+
+## Functions
+
+<PyFunction name={"complete"} type={"(self, request) -> Answer"}>
+
+Return the model's answer for *request*.
+
+<PySourceCode >
+
+```python
+async def complete(self, request: StructuredRequest) -> Answer:
+    """Return the model's answer for *request*.
+
+    Args:
+        request: The structured-output turn to answer.
+
+    Raises:
+        ModelUnavailable: if another attempt may succeed.
+        ModelRefused: if this request will not be served however often it
+            is asked.
+    """
+    ...
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"request"} type={"StructuredRequest"} value={undefined}>
+
+The structured-output turn to answer.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.llm.types.Answer"} />
+
+</PyFunction>

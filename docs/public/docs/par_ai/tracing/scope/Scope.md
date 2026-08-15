@@ -1,0 +1,172 @@
+# Scope (/docs/agentsparty/tracing/scope/Scope)
+
+A place to record from: a tracer, one span, and the shared counters.
+
+## Attributes
+
+<PyAttribute name={"tracer"} type={"Tracer"} value={null} />
+
+<PyAttribute name={"span"} type={"Span"} value={null} />
+
+<PyAttribute name={"ids"} type={"Iterator[SpanId]"} value={null} />
+
+<PyAttribute name={"seq"} type={"Iterator[int]"} value={null} />
+
+## Functions
+
+<PyFunction name={"record"} type={"(self, signal) -> None"}>
+
+Record *signal* as a point event in this scope's span.
+
+<PySourceCode >
+
+```python
+def record(self, signal: Signal) -> None:
+    """Record *signal* as a point event in this scope's span.
+
+    Args:
+        signal: The fact to record.
+    """
+    self.tracer.record(Event(signal, self.span, next(self.seq)))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"signal"} type={"Signal"} value={undefined}>
+
+The fact to record.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"child"} type={"(self) -> Scope"}>
+
+A scope for a nested span, sharing the tracer and the counters.
+
+<PySourceCode >
+
+```python
+def child(self) -> Scope:
+    """A scope for a nested span, sharing the tracer and the counters."""
+    return Scope(
+        self.tracer,
+        Span(next(self.ids), self.span.id),
+        self.ids,
+        self.seq,
+    )
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"agentsparty.tracing.scope.Scope"} />
+
+</PyFunction>
+
+<PyFunction name={"enter"} type={"(self) -> Iterator[Scope]"}>
+
+Make this scope the ambient one for the length of the block.
+
+Nothing is recorded and no span is opened: this is the ambient scope's
+acquire/release pair on its own, for the case where there is no domain
+signal to open with. Watching a single model call is that case. When
+there *is* a signal, use `open`.
+
+<PySourceCode >
+
+```python
+@contextmanager
+def enter(self) -> Iterator[Scope]:
+    """Make this scope the ambient one for the length of the block.
+
+    Nothing is recorded and no span is opened: this is the ambient scope's
+    acquire/release pair on its own, for the case where there is no domain
+    signal to open with. Watching a single model call is that case. When
+    there *is* a signal, use :meth:`open`.
+
+    Yields:
+        This scope, now the ambient one.
+    """
+    token = _CURRENT.set(self)
+    try:
+        yield self
+    finally:
+        _CURRENT.reset(token)
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"collections.abc.Iterator[agentsparty.tracing.scope.Scope]"} />
+
+</PyFunction>
+
+<PyFunction name={"open"} type={"(self, opening) -> Iterator[Scope]"}>
+
+Record *opening*, make this scope ambient, and close it on the way out.
+
+If the body raises, [`Failed`](/docs/agentsparty/tracing/signals/Failed) is recorded
+before the exception propagates; the domain terminator (for example
+``Delivered``) is the caller's to record.
+
+<PySourceCode >
+
+```python
+@contextmanager
+def open(self, opening: Signal) -> Iterator[Scope]:
+    """Record *opening*, make this scope ambient, and close it on the way out.
+
+    If the body raises, :class:`~agentsparty.tracing.signals.Failed` is recorded
+    before the exception propagates; the domain terminator (for example
+    ``Delivered``) is the caller's to record.
+
+    Args:
+        opening: The signal that opens the span.
+
+    Yields:
+        This scope, now the ambient one.
+    """
+    with self.enter():
+        self.record(opening)
+        try:
+            yield self
+        except Exception as exc:
+            self.record(Failed(fault(exc)))
+            raise
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"opening"} type={"Signal"} value={undefined}>
+
+The signal that opens the span.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"collections.abc.Iterator[agentsparty.tracing.scope.Scope]"} />
+
+</PyFunction>
+
+<PyFunction name={"__init__"} type={"(self, tracer, span, ids, seq) -> None"}>
+
+<div >
+
+<PyParameter name={"tracer"} type={"Tracer"} value={null} />
+<PyParameter name={"span"} type={"Span"} value={null} />
+<PyParameter name={"ids"} type={"Iterator[SpanId]"} value={null} />
+<PyParameter name={"seq"} type={"Iterator[int]"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

@@ -1,0 +1,16 @@
+# OpenAIClient (/docs/agentsparty/llm/openai/OpenAIClient)
+
+What `OpenAIModel` needs from an OpenAI-compatible client.
+
+Structural: any object whose ``responses.create`` starts a Responses-API
+stream. ``AsyncOpenAI`` satisfies this; so do the stubs in the tests.
+``responses`` is a read-only property so it matches the SDK's
+``cached_property`` (a writable Protocol attribute would reject it).
+
+## Attributes
+
+<PyAttribute name={"responses"} type={"OpenAIResponses"} value={null}>
+
+Surface with an async ``create(..., stream=True)`` method.
+
+</PyAttribute>

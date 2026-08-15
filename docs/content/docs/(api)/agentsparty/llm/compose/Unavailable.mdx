@@ -1,0 +1,61 @@
+---
+title: Unavailable
+---
+
+A model that never answers.
+
+The honest value for "no model configured": putting it in front of a
+fallback chain changes nothing.
+
+## Attributes
+
+<PyAttribute name={"reason"} type={"str"} value={"'no model is configured'"} />
+
+## Functions
+
+<PyFunction name={"complete"} type={"(self, request) -> Answer"}>
+
+Never return.
+
+<PySourceCode >
+
+```python
+async def complete(self, request: StructuredRequest) -> Answer:
+    """Never return.
+
+    Args:
+        request: Ignored.
+
+    Raises:
+        ModelUnavailable: always.
+    """
+    raise ModelUnavailable(self.reason)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"request"} type={"StructuredRequest"} value={undefined}>
+
+Ignored.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.llm.types.Answer"} />
+
+</PyFunction>
+
+<PyFunction name={"__init__"} type={"(self, reason='no model is configured') -> None"}>
+
+<div >
+
+<PyParameter name={"reason"} type={"str"} value={"'no model is configured'"} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

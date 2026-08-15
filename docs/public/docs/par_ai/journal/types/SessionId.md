@@ -1,0 +1,21 @@
+# SessionId (/docs/agentsparty/journal/types/SessionId)
+
+Identity of one recorded session.
+
+## Attributes
+
+<PyAttribute name={"value"} type={"str"} value={null} />
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, value) -> None"}>
+
+<div >
+
+<PyParameter name={"value"} type={"str"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

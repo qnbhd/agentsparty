@@ -1,0 +1,35 @@
+# Duty (/docs/agentsparty/protocol/analysis/Duty)
+
+One message a role is charged with authoring: to whom, what, and why.
+
+The industry's ``Task`` record, derived rather than authored: agentsparty writes
+the choreography and reads the task list off it, instead of writing the
+task list and inferring the choreography. ``payload`` is the codec *name*,
+the same identity a [`Decision`](/docs/agentsparty/journal/types/Decision) records.
+
+## Attributes
+
+<PyAttribute name={"receiver"} type={"Role"} value={null} />
+
+<PyAttribute name={"label"} type={"Label"} value={null} />
+
+<PyAttribute name={"payload"} type={"str"} value={null} />
+
+<PyAttribute name={"intent"} type={"str"} value={null} />
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, receiver, label, payload, intent) -> None"}>
+
+<div >
+
+<PyParameter name={"receiver"} type={"Role"} value={null} />
+<PyParameter name={"label"} type={"Label"} value={null} />
+<PyParameter name={"payload"} type={"str"} value={null} />
+<PyParameter name={"intent"} type={"str"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

@@ -1,0 +1,21 @@
+# openai (/docs/agentsparty/llm/openai/index)
+
+OpenAI Responses API backend for `LanguageModel`.
+
+Extension tier: import from ``agentsparty.llm.openai`` (provider SDK dependency).
+
+<Tabs items={["Class"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"OpenAIClient"} href={"/docs/agentsparty/llm/openai/OpenAIClient"} />
+<Card title={"OpenAIResponses"} href={"/docs/agentsparty/llm/openai/OpenAIResponses"} />
+<Card title={"OpenAIModel"} href={"/docs/agentsparty/llm/openai/OpenAIModel"} />
+
+</Cards>
+
+</Tab>
+
+</Tabs>

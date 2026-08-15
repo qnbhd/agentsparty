@@ -1,0 +1,474 @@
+---
+title: Agent
+---
+
+An LLM-driven participant for one role.
+
+The model never routes the workflow: it only fills a typed payload
+(`run`) or picks a declared branch (`select`).
+
+Memory is a [`Brief`](/docs/agentsparty/brief/Brief) — a pure fold over envelopes the
+agent sent or received. A successful `select` remembers the alt
+exactly as `recall` would on a replay, so a resumed session shows the
+model the same conversation the recording session did.
+
+## Attributes
+
+<PyAttribute name={"effort"} type={"Effort"} value={"effort"} />
+
+<PyAttribute name={"endpoint_contract"} type={"EndpointType"} value={"associate(declares, proto, role)"} />
+
+<PyAttribute name={"messages"} type={"list[Message]"} value={null}>
+
+A copy of the conversation the model would be shown next.
+
+</PyAttribute>
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, model, role, instructions, proto, effort='low', brief=None, repair=DEFAULT_REPAIR, declares=None) -> None"}>
+
+Bind *model* to *role* under *proto*.
+
+<PySourceCode >
+
+```python
+def __init__(
+    self,
+    model: LanguageModel,
+    role: Role,
+    instructions: str,
+    proto: SessionType,
+    effort: Effort = 'low',
+    brief: Brief | None = None,
+    repair: Repair = DEFAULT_REPAIR,
+    declares: EndpointType | None = None,
+) -> None:
+    """Bind *model* to *role* under *proto*.
+
+    Args:
+        model: The language model that fills payloads and picks branches.
+        role: The role this agent plays in the protocol.
+        instructions: System prompt describing how the agent must behave.
+        proto: The choreography; projected locally on construction.
+        effort: Reasoning effort passed to the model on every call.
+        brief: Initial memory; defaults to an empty
+            :class:`~agentsparty.brief.Transcript` for *role*.
+        repair: How many corrections the model is offered when an answer
+            will not decode. Defaults to one correction.
+        declares: An optional endpoint contract; defaults to the projection.
+
+    Raises:
+        ConformanceError: if *declares* is not a subtype of the projection.
+    """
+    self.model = model
+    self.role = role
+    self.instructions = instructions
+    self.effort: Effort = effort
+    self.repair = repair
+
+    self.endpoint_contract: EndpointType = associate(declares, proto, role)
+    self._initial: Brief = Transcript(role)
+    if brief is not None:
+        self._initial = brief
+    self._brief: Brief = self._initial
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"model"} type={"LanguageModel"} value={undefined}>
+
+The language model that fills payloads and picks branches.
+
+</PyParameter>
+<PyParameter name={"role"} type={"Role"} value={undefined}>
+
+The role this agent plays in the protocol.
+
+</PyParameter>
+<PyParameter name={"instructions"} type={"str"} value={undefined}>
+
+System prompt describing how the agent must behave.
+
+</PyParameter>
+<PyParameter name={"proto"} type={"SessionType"} value={undefined}>
+
+The choreography; projected locally on construction.
+
+</PyParameter>
+<PyParameter name={"effort"} type={"Effort"} value={"'low'"}>
+
+Reasoning effort passed to the model on every call.
+
+</PyParameter>
+<PyParameter name={"brief"} type={"Brief | None"} value={"None"}>
+
+Initial memory; defaults to an empty
+[`Transcript`](/docs/agentsparty/brief/Transcript) for *role*.
+
+</PyParameter>
+<PyParameter name={"repair"} type={"Repair"} value={"DEFAULT_REPAIR"}>
+
+How many corrections the model is offered when an answer
+will not decode. Defaults to one correction.
+
+</PyParameter>
+<PyParameter name={"declares"} type={"EndpointType | None"} value={"None"}>
+
+An optional endpoint contract; defaults to the projection.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"at"} type={"(cls, model, role, instructions, endpoint, effort='low', brief=None, repair=DEFAULT_REPAIR) -> Agent[T]"}>
+
+Bind *model* to *role* under a ready *endpoint* (cast entry).
+
+<PySourceCode >
+
+```python
+@classmethod
+def at(
+    cls,
+    model: LanguageModel,
+    role: Role,
+    instructions: str,
+    endpoint: EndpointType,
+    effort: Effort = 'low',
+    brief: Brief | None = None,
+    repair: Repair = DEFAULT_REPAIR,
+) -> Agent[T]:
+    """Bind *model* to *role* under a ready *endpoint* (cast entry).
+
+    Args:
+        model: The language model that fills payloads and picks branches.
+        role: The role this agent plays.
+        instructions: System prompt describing how the agent must behave.
+        endpoint: The projected endpoint for *role* (already associated).
+        effort: Reasoning effort passed to the model on every call.
+        brief: Initial memory; defaults to an empty transcript for *role*.
+        repair: How many corrections the model is offered on a bad answer.
+    """
+    agent: Agent[T] = object.__new__(cls)
+    agent.model = model
+    agent.role = role
+    agent.instructions = instructions
+    agent.effort = effort
+    agent.repair = repair
+    agent.endpoint_contract = endpoint
+    agent._initial = Transcript(role) if brief is None else brief
+    agent._brief = agent._initial
+    return agent
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"cls"} type={null} value={null} />
+<PyParameter name={"model"} type={"LanguageModel"} value={undefined}>
+
+The language model that fills payloads and picks branches.
+
+</PyParameter>
+<PyParameter name={"role"} type={"Role"} value={undefined}>
+
+The role this agent plays.
+
+</PyParameter>
+<PyParameter name={"instructions"} type={"str"} value={undefined}>
+
+System prompt describing how the agent must behave.
+
+</PyParameter>
+<PyParameter name={"endpoint"} type={"EndpointType"} value={undefined}>
+
+The projected endpoint for *role* (already associated).
+
+</PyParameter>
+<PyParameter name={"effort"} type={"Effort"} value={"'low'"}>
+
+Reasoning effort passed to the model on every call.
+
+</PyParameter>
+<PyParameter name={"brief"} type={"Brief | None"} value={"None"}>
+
+Initial memory; defaults to an empty transcript for *role*.
+
+</PyParameter>
+<PyParameter name={"repair"} type={"Repair"} value={"DEFAULT_REPAIR"}>
+
+How many corrections the model is offered on a bad answer.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.agent.Agent[agentsparty.agent.T]"} />
+
+</PyFunction>
+
+<PyFunction name={"clear"} type={"(self) -> None"}>
+
+Reset the agent's memory to the brief it was constructed with.
+
+<PySourceCode >
+
+```python
+def clear(self) -> None:
+    """Reset the agent's memory to the brief it was constructed with."""
+    self._brief = self._initial
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"cancel"} type={"(self, notice) -> None"}>
+
+Forget the session: memory returns to the brief the agent started with.
+
+<PySourceCode >
+
+```python
+async def cancel(self, notice: Cancelled) -> None:
+    """Forget the session: memory returns to the brief the agent started with.
+
+    Args:
+        notice: Why the session was rolled up.
+    """
+    self.clear()
+    post(
+        expr=self._brief == self._initial,
+        message='a cancelled agent must hold the brief it was constructed with',
+    )
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"notice"} type={"Cancelled"} value={undefined}>
+
+Why the session was rolled up.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"select"} type={"(self, receiver, branches) -> Chosen[B]"}>
+
+Have the model pick one branch and a matching payload for *receiver*.
+
+The selection prompt is recomputed from the protocol node and is never
+remembered. The chosen envelope is remembered in the same rendered form
+that `recall` would use on a replay.
+
+<PySourceCode >
+
+```python
+async def select(
+    self,
+    receiver: Role,
+    branches: NonEmptyMap[Label, B],
+) -> Chosen[B]:
+    """Have the model pick one branch and a matching payload for *receiver*.
+
+    The selection prompt is recomputed from the protocol node and is never
+    remembered. The chosen envelope is remembered in the same rendered form
+    that :meth:`recall` would use on a replay.
+
+    Args:
+        receiver: The role that will receive the chosen message.
+        branches: The labelled alts offered to the model.
+
+    Returns:
+        The chosen branch together with its decoded payload.
+    """
+    offered = branches
+    # build the request from memory plus a prompt that is *not* remembered:
+    codec = selection_codec(offered)
+    conversation = (*self._brief.messages(), _prompt(self.role, receiver, offered))
+    chosen = await self._author(
+        'agent_alt',
+        codec,
+        conversation,
+        self.repair.attempts,
+    )
+    # remember the alt exactly as `recall` would on a replay:
+    self._brief = self._brief.remember(
+        Envelope(self.role, receiver, chosen.branch.label, chosen.payload),
+    )
+    return chosen
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"receiver"} type={"Role"} value={undefined}>
+
+The role that will receive the chosen message.
+
+</PyParameter>
+<PyParameter name={"branches"} type={"NonEmptyMap[Label, B]"} value={undefined}>
+
+The labelled alts offered to the model.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.protocol.language.core.Chosen"}>
+
+The chosen branch together with its decoded payload.
+
+</PyFunctionReturn>
+
+</PyFunction>
+
+<PyFunction name={"offer"} type={"(self, envelope) -> None"}>
+
+Record *envelope* as an incoming message in the conversation.
+
+Same transition as `recall`: both fold *envelope* into the brief,
+which is what makes a resumed session faithful.
+
+<PySourceCode >
+
+```python
+async def offer(self, envelope: Envelope) -> None:
+    """Record *envelope* as an incoming message in the conversation.
+
+    Same transition as :meth:`recall`: both fold *envelope* into the brief,
+    which is what makes a resumed session faithful.
+
+    Args:
+        envelope: The protocol message being delivered.
+    """
+    self._brief = self._brief.remember(envelope)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"envelope"} type={"Envelope"} value={undefined}>
+
+The protocol message being delivered.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"recall"} type={"(self, envelope) -> None"}>
+
+Record *envelope* as a message this agent sent earlier.
+
+Same transition as `offer`: both fold *envelope* into the brief,
+which is what makes a resumed session faithful.
+
+<PySourceCode >
+
+```python
+async def recall(self, envelope: Envelope) -> None:
+    """Record *envelope* as a message this agent sent earlier.
+
+    Same transition as :meth:`offer`: both fold *envelope* into the brief,
+    which is what makes a resumed session faithful.
+
+    Args:
+        envelope: The protocol message this agent sent earlier.
+    """
+    self._brief = self._brief.remember(envelope)
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"envelope"} type={"Envelope"} value={undefined}>
+
+The protocol message this agent sent earlier.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
+
+<PyFunction name={"run"} type={"(self, prompt, output_type) -> T"}>
+
+Ask the model a free-form *prompt* and decode its answer.
+
+A free-form request is not a protocol act, so it leaves no brief
+memory and cannot change what the next `select` shows the model.
+
+<PySourceCode >
+
+```python
+async def run(self, prompt: str, output_type: Codec[T]) -> T:
+    """Ask the model a free-form *prompt* and decode its answer.
+
+    A free-form request is not a protocol act, so it leaves no brief
+    memory and cannot change what the next :meth:`select` shows the model.
+
+    Args:
+        prompt: The user message sent to the model.
+        output_type: Codec describing the expected JSON payload.
+
+    Returns:
+        The decoded payload.
+    """
+    conversation = (*self._brief.messages(), Message(role='user', content=prompt))
+    return await self._author(
+        'agent_output',
+        output_type,
+        conversation,
+        self.repair.attempts,
+    )
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"prompt"} type={"str"} value={undefined}>
+
+The user message sent to the model.
+
+</PyParameter>
+<PyParameter name={"output_type"} type={"Codec[T]"} value={undefined}>
+
+Codec describing the expected JSON payload.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.agent.T"}>
+
+The decoded payload.
+
+</PyFunctionReturn>
+
+</PyFunction>

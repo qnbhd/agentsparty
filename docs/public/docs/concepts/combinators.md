@@ -1,0 +1,138 @@
+# Combinators (/docs/concepts/combinators)
+
+# Combinators
+
+Five constructors shape a protocol tree: `msg`, `>>`, `alt`, `rec` / `var`,
+and `par`. Their rendered text and tree shapes use the same structure.
+
+```python exec
+from agentsparty.protocol import Nothing, Text, alt, msg, par, rec, render, var
+from agentsparty.kernel.role import roles
+
+W, V, A, B, C, D = roles('W', 'V', 'A', 'B', 'C', 'D')
+
+review = msg[W, V](Text('Draft')) >> alt[V, W](
+    Nothing('Approve'),
+    Text('Reject'),
+)
+poll = rec(
+    'Poll',
+    msg[A, B](Text('Tick')) >> var('Poll'),
+).close()
+split = par(
+    msg[A, B](Text('L')),
+    msg[C, D](Text('R')),
+).close()
+
+print(render(review))
+print(render(poll))
+print(render(split))
+```
+
+`Nothing` is the payload-free codec when a branch carries only its label.
+
+## msg
+
+`msg[S, R](payload)` is one directed interaction: sender, receiver, and codec
+become one node in the protocol tree. Each miniature below shows both views
+of the same fragment: the text `render` prints on the left, the tree that
+text stands for on the right.
+
+<MsgMiniature />
+
+One rendered line, one node — the two roles and the codec are its leaves.
+
+## &gt;&gt;
+
+`left >> right` sequences two fragments. The left child must finish before
+the right child begins.
+
+<SequenceMiniature />
+
+The `seq` node holds its children in order, so the order of the rendered
+lines is the order of the tree.
+
+## alt
+
+The first role argument is the chooser; the second receives the branch
+label. Each branch is a case — a labelled codec, optionally followed by a
+continuation.
+
+<AltMiniature />
+
+The `alt` node has exactly one child per declared case. A label that is not
+a child does not exist at runtime either.
+
+```python exec
+from agentsparty.protocol import Nothing, Text, alt, msg, render
+from agentsparty.kernel.role import roles
+
+Writer, Reviewer = roles('Writer', 'Reviewer')
+Draft = Text('Draft')
+Approve = Nothing('Approve')
+Reject = Text('Reject')
+protocol = msg[Writer, Reviewer](Draft) >> alt[Reviewer, Writer](
+    Approve, Reject
+)
+print(render(protocol))
+```
+
+The `Reject` branch currently informs only the Writer. A third role whose
+next action depends on the outcome still has to observe the choice —
+[knowledge of alt](/docs/concepts/knowledge-of-alt) is the check.
+
+## rec and var
+
+`rec('X', body)` names a recursion variable; `var('X')` jumps back to it.
+The jump must sit behind an interaction (guarded recursion) so the runtime
+can unfold a bounded number of times.
+
+<RecMiniature />
+
+`var X` is a leaf pointing back at its binder — the back edge in the tree is
+the repeated `X` in the rendered text.
+
+```python exec
+from agentsparty.protocol import Text, msg, rec, render, var
+from agentsparty.kernel.role import roles
+
+A, B = roles('A', 'B')
+poll = rec(
+    'Poll',
+    msg[A, B](Text('Tick')) >> var('Poll'),
+).close()
+print(render(poll))
+```
+
+`repeat(times, fragment)` unrolls a fixed number of copies and accepts
+`times == 0`. Recursion that may run forever is a static question about
+paths; the runtime bound is an `Allowance`. See
+[composition and termination](/docs/concepts/composition-and-termination).
+
+## par
+
+Tracks must have disjoint roles. They may interleave. There is no product
+payload and no implicit continuation after both finish. Convergence is an
+ordinary message from a role that participates in both conversations.
+
+<ParMiniature />
+
+The tracks are siblings, not a chain: neither is the other's continuation,
+which is why nothing hangs below the `par` node.
+
+```python exec
+from agentsparty.protocol import Text, msg, par, render
+from agentsparty.kernel.role import roles
+
+A, B, C, D = roles('A', 'B', 'C', 'D')
+split = par(
+    msg[A, B](Text('L')),
+    msg[C, D](Text('R')),
+).close()
+print(render(split))
+```
+
+The same operators exist as statements under
+[`@choreography`](/docs/concepts/choreography). The same operators appear
+in [the coding-agent harness](/docs/tutorials/coding-harness/declare-the-conversation).
+

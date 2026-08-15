@@ -1,0 +1,445 @@
+---
+title: Overview
+description: Declare a typed conversation, project it onto roles, and run it.
+aliases:
+  - home
+  - docs home
+journey: evaluate
+status: stable
+---
+
+# agentsparty
+
+A multiparty conversation is a typed value: named roles, labelled messages,
+branches, and loops. `agentsparty` projects that value onto each role, refuses a
+protocol a role cannot observe, and runs the session in-process. Participants
+fill declared payloads and pick declared branches.
+
+```bash
+pip install 'agentsparty[openai]'
+export OPENAI_API_KEY=...
+```
+
+## A session
+
+Declare the conversation first. `render` prints it before anyone runs.
+
+```python exec
+import agentsparty as pa
+from agentsparty.protocol import msg, render
+
+Writer, Reader = pa.roles('Writer', 'Reader')
+Note = pa.Text('Note')
+protocol = msg[Writer, Reader](Note)
+print(render(protocol))
+```
+
+```text
+Writer -> Reader : Note(str)
+end
+```
+
+Bind `gpt-5.6-luna` to each role and pass the participants to `AgentRuntime`:
+
+```python compile
+import asyncio
+
+from openai import AsyncOpenAI
+import agentsparty as pa
+from agentsparty.protocol import msg
+
+Writer, Reader = pa.roles('Writer', 'Reader')
+Note = pa.Text('Note')
+protocol = msg[Writer, Reader](Note)
+
+model = pa.OpenAIModel(
+    'gpt-5.6-luna',
+    AsyncOpenAI(max_retries=0, timeout=30.0),
+)
+writer = pa.Agent(
+    model,
+    Writer,
+    'Send a concise note.',
+    protocol,
+)
+reader = pa.Agent(
+    model,
+    Reader,
+    'Receive the note.',
+    protocol,
+)
+
+
+async def main() -> None:
+    runtime = pa.AgentRuntime(protocol, [writer, reader])
+    envelope = (await runtime.run())[0]
+    print(
+        f'{envelope.sender.name} -> {envelope.receiver.name}: '
+        f'{envelope.label}({envelope.payload!r})'
+    )
+
+
+asyncio.run(main())
+```
+
+`AgentRuntime` projects the protocol and requires exactly one participant per
+role. The writer authors `Note`; the reader takes the envelope.
+
+## Combinators
+
+`msg[S, R](payload)` is one edge. `>>` sequences. `alt[chooser, informed]`
+offers labelled continuations. `rec` / `var` bind a guarded loop. `par` runs
+tracks whose role sets are disjoint; it has no join value.
+
+```python exec
+import agentsparty as pa
+from agentsparty.protocol import alt, msg, par, rec, render, var
+
+W, V, A, B, C, D = pa.roles('W', 'V', 'A', 'B', 'C', 'D')
+
+review = msg[W, V](pa.Text('Draft')) >> alt[V, W](
+    pa.Nothing('Approve'),
+    pa.Text('Reject'),
+)
+poll = rec(
+    'Poll',
+    msg[A, B](pa.Text('Tick')) >> var('Poll'),
+).close()
+split = par(
+    msg[A, B](pa.Text('L')),
+    msg[C, D](pa.Text('R')),
+).close()
+
+print(render(review))
+print(render(poll))
+print(render(split))
+```
+
+## Projection
+
+A role whose next action changes across branches must observe the choice.
+`project` checks that before any participant is asked.
+
+```python exec
+import agentsparty as pa
+from agentsparty.protocol import alt, msg, project
+
+A, B, C = pa.roles('A', 'B', 'C')
+broken = alt[A, B](
+    pa.Nothing('Yes') >> msg[A, C]('Y', pa.Text),
+    pa.Nothing('No') >> msg[C, A]('N', pa.Text),
+).close()
+try:
+    project(broken, C)
+except pa.ProjectionError as err:
+    print(type(err).__name__)
+```
+
+Send a branch-specific message to every role whose continuation differs.
+[Knowledge of alt](/docs/concepts/knowledge-of-alt) walks through the repair.
+
+## Payloads
+
+A label names the operation; a codec names the value. Decode runs at the
+boundary, so handlers receive a value that already satisfies the predicate.
+
+```python exec
+import agentsparty as pa
+from agentsparty.kernel.errors import PayloadError
+
+Positive = pa.Integer.where('positive', lambda n: n > 0)
+print(Positive.decode(3))
+try:
+    Positive.decode(-1)
+except PayloadError as err:
+    print(type(err).__name__)
+
+Draft = pa.record('Draft', title=str, words=int)
+print(Draft.decode({'title': 'v1', 'words': 12}))
+```
+
+`Text`, `Integer`, `Flag`, `list_of`, `one_of`, and `record` compose. Use
+`json_model` when a schema and a parser already exist.
+
+## Cast
+
+`Cast` is the same binding written as a pipeline. Each `play` attaches a
+factory to one projected endpoint; `run_sync` demands every role is played.
+
+```python compile
+from openai import AsyncOpenAI
+import agentsparty as pa
+from agentsparty.protocol import msg
+
+Writer, Reader = pa.roles('Writer', 'Reader')
+protocol = msg[Writer, Reader](pa.Text('Note'))
+model = pa.OpenAIModel(
+    'gpt-5.6-luna',
+    AsyncOpenAI(max_retries=0, timeout=30.0),
+)
+trace = (
+    pa
+    .Cast(protocol)
+    .play(Writer, pa.agent(model, 'Send a concise note.'))
+    .play(Reader, pa.agent(model, 'Receive the note.'))
+    .run_sync()
+)
+envelope = trace[0]
+print(
+    f'{envelope.sender.name} -> {envelope.receiver.name}: {envelope.label}({envelope.payload!r})'
+)
+```
+
+## Participants
+
+`Agent` lets a model author. `Human` waits at a console. `Machine` computes a
+`Choice` from the envelopes it has seen. `service` answers a request the
+protocol already typed.
+
+```python exec
+import agentsparty as pa
+from agentsparty.machine import machine
+from agentsparty.protocol import msg
+
+Lead, Worker = pa.roles('Lead', 'Worker')
+Task = pa.Text('Task')
+protocol = msg[Lead, Worker](Task)
+
+
+def assign(view: pa.View) -> pa.Choice:
+    return pa.says(Task, 'summarise the brief')
+
+
+def unused(view: pa.View) -> pa.Choice:
+    raise RuntimeError('Worker only receives')
+
+
+trace = (
+    pa
+    .Cast(protocol)
+    .play(Lead, machine(assign))
+    .play(Worker, machine(unused))
+    .run_sync()
+)
+print(trace[0].payload)
+```
+
+```python compile
+from openai import AsyncOpenAI
+import agentsparty as pa
+from agentsparty.protocol import alt
+
+Asker, Tools = pa.roles('Asker', 'Tools')
+Search = pa.Text('search')
+Hits = pa.Text.many()('hits')
+protocol = alt[Asker, Tools](
+    Search >> alt[Tools, Asker](Hits),
+)
+model = pa.OpenAIModel(
+    'gpt-5.6-luna',
+    AsyncOpenAI(max_retries=0, timeout=30.0),
+)
+
+
+async def search(query: str) -> pa.Choice:
+    return pa.reply(Hits, [query])
+
+
+trace = (
+    pa
+    .Cast(protocol)
+    .play(Asker, pa.agent(model, 'Search once, then stop.'))
+    .play(Tools, pa.service(pa.tool_for(Search, search)))
+    .run_sync()
+)
+print([envelope.label.name for envelope in trace])
+```
+
+A custom [[agentsparty.participant.Participant]] implements `select`, `offer`,
+`recall`, and `cancel` against the same projected endpoint.
+
+## Choreography
+
+`@choreography` records the same session type from Python statements.
+`c.say`, `c.decide`, `c.loop`, `c.times`, and `c.parallel` are the operators.
+
+```python exec
+import agentsparty as pa
+from agentsparty.protocol import equal_session, msg, render
+
+Writer, Reader = pa.roles('Writer', 'Reader')
+
+
+@pa.choreography
+def note(c: pa.Chor) -> None:
+    c.say(Writer, Reader, 'Note')
+
+
+print(render(note()))
+print(equal_session(note(), msg[Writer, Reader]('Note').close()))
+```
+
+## Routines
+
+A `Routine` is a named fragment with formal roles. `do` binds actual roles
+and returns a fragment you can sequence further.
+
+```python exec
+import agentsparty as pa
+from agentsparty.protocol import Routine, do, msg, render
+
+Sender, Receiver = pa.roles('Sender', 'Receiver')
+review = Routine(
+    'review',
+    (Sender, Receiver),
+    msg[Sender, Receiver](pa.Text('Draft')),
+)
+Writer, Editor = pa.roles('Writer', 'Editor')
+print(render(do(review, Writer, Editor).close()))
+```
+
+## Composition
+
+`compose(contract, components)` builds one session type from components that
+fit a shared interface. Internal role sets must be disjoint.
+
+```python exec
+import agentsparty as pa
+from agentsparty.protocol import compose, msg, owning, render
+
+Brand, Analyst, Photo = pa.roles('Brand', 'Analyst', 'Photo')
+Product = pa.Text('Product')
+Copy = pa.Text('Copy')
+Post = pa.Text('Post')
+text = owning(Analyst).defining(
+    msg[Brand, Analyst](Product) >> msg[Analyst, Photo](Copy),
+)
+image = owning(Photo).defining(
+    msg[Analyst, Photo](Copy) >> msg[Photo, Brand](Post),
+)
+contract = (
+    msg[Brand, Analyst](Product)
+    >> msg[Analyst, Photo](Copy)
+    >> msg[Photo, Brand](Post)
+).close()
+print(render(compose(contract, [text, image])))
+```
+
+## Resume
+
+A journal stores authored decisions. Replay restores them instead of asking
+the model again. `JsonlJournal` and `SqliteJournal` persist to disk.
+
+```python compile
+from pathlib import Path
+
+from openai import AsyncOpenAI
+import agentsparty as pa
+from agentsparty.protocol import msg
+
+Writer, Reader = pa.roles('Writer', 'Reader')
+protocol = msg[Writer, Reader](pa.Text('Note')).close()
+model = pa.OpenAIModel(
+    'gpt-5.6-luna',
+    AsyncOpenAI(max_retries=0, timeout=30.0),
+)
+journal = pa.JsonlJournal(Path('session.jsonl'), protocol)
+trace = (
+    pa
+    .Cast(protocol)
+    .play(Writer, pa.agent(model, 'Send a concise note.'))
+    .play(Reader, pa.agent(model, 'Receive the note.'))
+    .run_sync(journal=journal)
+)
+print(trace[0].label.name, len(journal.script().decisions))
+```
+
+## Observation
+
+A tracer records events for inspection. `StreamTracer` delivers them as they
+occur; events carry a facet (runtime, protocol, model, tool). `debug.Report`
+prints a protocol, a conversation, or counted facts to a `Console`.
+
+```python compile
+from openai import AsyncOpenAI
+import agentsparty as pa
+from agentsparty.protocol import msg
+
+Writer, Reader = pa.roles('Writer', 'Reader')
+protocol = msg[Writer, Reader](pa.Text('Note'))
+model = pa.OpenAIModel(
+    'gpt-5.6-luna',
+    AsyncOpenAI(max_retries=0, timeout=30.0),
+)
+tracer = pa.MemoryTracer()
+(
+    pa
+    .Cast(protocol)
+    .play(Writer, pa.agent(model, 'Send a concise note.'))
+    .play(Reader, pa.agent(model, 'Receive the note.'))
+    .run_sync(tracer=tracer)
+)
+print(len(tracer.events))
+```
+
+## Budget
+
+`Allowance` bounds protocol steps and recursion unfolds for one run. Replayed
+journal decisions do not consume it. The first failure cancels every bound
+participant.
+
+```python compile
+from openai import AsyncOpenAI
+import agentsparty as pa
+from agentsparty.protocol import msg
+
+Writer, Reader = pa.roles('Writer', 'Reader')
+protocol = msg[Writer, Reader](pa.Text('Note'))
+model = pa.OpenAIModel(
+    'gpt-5.6-luna',
+    AsyncOpenAI(max_retries=0, timeout=30.0),
+)
+try:
+    pa.AgentRuntime(
+        protocol,
+        [
+            pa.Agent(model, Writer, 'Send a note.', protocol),
+            pa.Agent(model, Reader, 'Receive the note.', protocol),
+        ],
+        allowance=pa.Allowance(steps=0),
+    ).run_sync()
+except pa.StepLimitError as err:
+    print(type(err).__name__)
+```
+
+`Deadline` closes the current waiting window.
+
+## Models
+
+`OpenAIModel` speaks the OpenAI Responses API. Wrappers nest: `Retrying`
+retries `ModelUnavailable`, `fallback` tries the next model, `Metered`
+refuses the next call once receipts pass a cap.
+
+```python compile
+from openai import AsyncOpenAI
+import agentsparty as pa
+
+client = AsyncOpenAI(max_retries=0, timeout=30.0)
+primary = pa.OpenAIModel('gpt-5.6-luna', client)
+backup = pa.OpenAIModel('gpt-5.6-luna', client)
+model = pa.fallback(
+    pa.Retrying(primary, attempts=2),
+    pa.Metered(backup, tokens=8_000),
+)
+print(type(model).__name__)
+```
+
+## Next
+
+- [Install](/docs/start/install) and [quickstart](/docs/start/quickstart)
+- [Core Concepts](/docs/concepts/protocol-first) — session types, combinators, projection, participants
+- [Tutorials](/docs/tutorials/coding-harness/start) — build a coding-agent harness
+- [What you can rely on](/docs/start/what-you-can-rely-on) — the 0.1.x boundary
+
+Research framework at `0.1.x`. Exception *types* are stable; message text and
+journal formats are not.

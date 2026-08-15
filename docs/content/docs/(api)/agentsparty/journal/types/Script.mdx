@@ -1,0 +1,216 @@
+---
+title: Script
+---
+
+The decisions of one session: one contiguous word per track.
+
+A journal *file* is a linearisation: entries from independent tracks may
+interleave in any order, because the protocol never ordered them. This is
+the boundary that turns that word back into the trace it denotes —
+`of` groups entries by track and requires ``1..n`` inside each
+group. Nothing downstream re-checks.
+
+## Attributes
+
+<PyAttribute name={"words"} type={"Mapping[Track, tuple[Decision, ...]]"} value={null} />
+
+<PyAttribute name={"decisions"} type={"tuple[Decision, ...]"} value={null}>
+
+Every decision in canonical order (track-major, then position).
+
+</PyAttribute>
+
+<PyAttribute name={"length"} type={"int"} value={null}>
+
+How many decisions this script holds, over every track.
+
+</PyAttribute>
+
+## Functions
+
+<PyFunction name={"of"} type={"(cls, entries) -> Script"}>
+
+Parse *entries* into a script.
+
+Groups by track, preserving appearance order within each group, and
+requires positions ``1..n`` inside every group. Order between groups is
+free: independent tracks have no causal order.
+
+<PySourceCode >
+
+```python
+@classmethod
+def of(cls, entries: Iterable[Decision]) -> Script:
+    """Parse *entries* into a script.
+
+    Groups by track, preserving appearance order within each group, and
+    requires positions ``1..n`` inside every group. Order between groups is
+    free: independent tracks have no causal order.
+
+    Args:
+        entries: Recorded decisions, free interleaving across tracks.
+
+    Returns:
+        The parsed script.
+
+    Raises:
+        JournalError: if positions on any track are not ``1..n`` in order.
+    """
+    grouped = _group_by_track(entries)
+    words = {track: _word(track, group) for track, group in grouped.items()}
+    return cls(MappingProxyType(words))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"cls"} type={null} value={null} />
+<PyParameter name={"entries"} type={"Iterable[Decision]"} value={undefined}>
+
+Recorded decisions, free interleaving across tracks.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.journal.types.Script"}>
+
+The parsed script.
+
+</PyFunctionReturn>
+
+</PyFunction>
+
+<PyFunction name={"length_of"} type={"(self, track) -> int"}>
+
+How many steps this script already decides on *track*.
+
+<PySourceCode >
+
+```python
+def length_of(self, track: Track) -> int:
+    """How many steps this script already decides on *track*."""
+    return len(self.words.get(track, ()))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"track"} type={"Track"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"int"} />
+
+</PyFunction>
+
+<PyFunction name={"at"} type={"(self, step) -> Decision"}>
+
+The decision recorded for *step*.
+
+<PySourceCode >
+
+```python
+def at(self, step: StepIndex) -> Decision:
+    """The decision recorded for *step*.
+
+    Args:
+        step: A position this script decides.
+    """
+    word = self.words.get(step.track, ())
+    track_path = step.track.path
+    position = step.position
+    pre(
+        expr=position <= len(word),
+        message=f'step {track_path} #{position} is not in the script',
+    )
+    return word[step.position - 1]
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"step"} type={"StepIndex"} value={undefined}>
+
+A position this script decides.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.journal.types.Decision"} />
+
+</PyFunction>
+
+<PyFunction name={"upto"} type={"(self, step) -> Script"}>
+
+The causal prefix that ends at *step* — the fork operation.
+
+The track of *step* is truncated to *step.position*. Strict
+descendants of that track are dropped only when the truncation
+actually removes something (they exist only because the parent
+reached its parallel node). Independent tracks are left untouched:
+they share no causal order with *step*.
+
+<PySourceCode >
+
+```python
+def upto(self, step: StepIndex) -> Script:
+    """The causal prefix that ends at *step* — the fork operation.
+
+    The track of *step* is truncated to *step.position*. Strict
+    descendants of that track are dropped only when the truncation
+    actually removes something (they exist only because the parent
+    reached its parallel node). Independent tracks are left untouched:
+    they share no causal order with *step*.
+
+    Args:
+        step: The last position to keep on its track.
+    """
+    where = _step_where(step)
+    pre(
+        expr=step.position <= self.length_of(step.track),
+        message=f'step {where} is not in the script',
+    )
+    truncated = step.position < self.length_of(step.track)
+    kept: dict[Track, tuple[Decision, ...]] = {}
+    for track, word in self.words.items():
+        if track == step.track:
+            kept[track] = word[: step.position]
+        elif truncated and track.under(step.track) and track != step.track:
+            continue
+        else:
+            kept[track] = word
+    return Script(MappingProxyType(kept))
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"step"} type={"StepIndex"} value={undefined}>
+
+The last position to keep on its track.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.journal.types.Script"} />
+
+</PyFunction>
+
+<PyFunction name={"__init__"} type={"(self, words) -> None"}>
+
+<div >
+
+<PyParameter name={"words"} type={"Mapping[Track, tuple[Decision, ...]]"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

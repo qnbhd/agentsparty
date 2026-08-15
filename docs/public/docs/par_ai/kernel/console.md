@@ -1,0 +1,18 @@
+# console (/docs/agentsparty/kernel/console/index)
+
+Line-oriented console seam for CLI participants.
+
+<Tabs items={["Class"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"Console"} href={"/docs/agentsparty/kernel/console/Console"} />
+<Card title={"StreamConsole"} href={"/docs/agentsparty/kernel/console/StreamConsole"} />
+
+</Cards>
+
+</Tab>
+
+</Tabs>

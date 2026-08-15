@@ -1,0 +1,153 @@
+# Participants and roles (/docs/concepts/participants-and-roles)
+
+# Participants and roles
+
+A [[agentsparty.kernel.role.Role]] names a seat in the protocol. A
+[[agentsparty.participant.Participant]] implements `select` / `offer` (and the
+related hooks) for the projected endpoint of that seat.
+
+The four shipped kinds share one contract, so `Cast.play` can bind any of
+them to any role. Swapping a human for a machine changes the
+implementation; the runtime still checks the exact projected endpoint.
+
+## Four shipped implementations
+
+| Kind | Factory | Use when |
+| --- | --- | --- |
+| Agent | [[agentsparty.agent.agent]] | A model authors content |
+| Human | [[agentsparty.human.human]] | A person is in the loop |
+| Machine | [[agentsparty.machine.machine]] | Deterministic code decides |
+| Toolbox | [[agentsparty.toolbox.service]] | Tools act as a role |
+
+## Machine
+
+`Machine` computes a `Choice` from the envelopes it has seen.
+
+```python exec
+from agentsparty.machine import machine
+from agentsparty.participant import says
+from agentsparty.protocol import Text, msg
+from agentsparty.kernel.role import roles
+from agentsparty.runtime import Cast
+
+Lead, Worker = roles('Lead', 'Worker')
+Task = Text('Task')
+protocol = msg[Lead, Worker](Task)
+
+
+def assign(view):
+    return says(Task, 'summarise the brief')
+
+
+trace = (
+    Cast(protocol)
+    .play(Lead, machine(assign))
+    .play(Worker, machine(lambda view: None))
+    .run_sync()
+)
+print(trace[0].payload)
+```
+
+## Human review
+
+The `Reviewer` role can be played by a human today and a machine tomorrow.
+In a CLI session `human()` waits for input. In a test, `script()` supplies
+the same role's alts deterministically.
+
+```python exec
+from agentsparty.human import human, script
+from agentsparty.machine import machine
+from agentsparty.participant import says
+from agentsparty.protocol import Nothing, Text, alt, msg, render
+from agentsparty.kernel.role import roles
+from agentsparty.runtime import Cast
+
+Writer, Reviewer = roles('Writer', 'Reviewer')
+Draft = Text('Draft')
+Approve = Nothing('Approve')
+Revise = Text('Revise')
+protocol = msg[Writer, Reviewer](Draft) >> alt[Reviewer, Writer](
+    Approve, Revise
+)
+print(render(protocol))
+trace = (
+    Cast(protocol)
+    .play(Writer, machine(lambda view: says(Draft, 'v1')))
+    .play(Reviewer, human(script(says(Revise, 'add numbers'))))
+    .run_sync()
+)
+assert [envelope.label.name for envelope in trace] == ['Draft', 'Revise']
+print([envelope.label.name for envelope in trace])
+```
+
+The complete program is `docs/examples/tutorial/03_human_review.py`.
+
+## Agent and service
+
+`Agent` lets a model author against a projected endpoint. `service` answers
+a request the protocol already typed — the tool is a role, with a request
+case and a reply case.
+
+```python exec
+from agentsparty.machine import machine
+from agentsparty.participant import says
+from agentsparty.protocol import Text, alt
+from agentsparty.kernel.role import roles
+from agentsparty.runtime import Cast
+from agentsparty.toolbox import reply, service, tool_for
+
+Asker, Tools = roles('Asker', 'Tools')
+Search = Text('search')
+Hits = Text.many()('hits')
+protocol = alt[Asker, Tools](
+    Search >> alt[Tools, Asker](Hits),
+)
+
+
+async def search(query: str):
+    return reply(Hits, [query])
+
+
+trace = (
+    Cast(protocol)
+    .play(Asker, machine(lambda view: says(Search, 'brief')))
+    .play(Tools, service(tool_for(Search, search)))
+    .run_sync()
+)
+print([envelope.label.name for envelope in trace])
+```
+
+```python compile
+from openai import AsyncOpenAI
+from agentsparty.agent import agent
+from agentsparty import OpenAIModel
+from agentsparty.protocol import Text, msg
+from agentsparty.kernel.role import roles
+from agentsparty.runtime import Cast
+
+Writer, Reader = roles('Writer', 'Reader')
+protocol = msg[Writer, Reader](Text('Note'))
+model = OpenAIModel('gpt-5.6-luna', AsyncOpenAI(max_retries=0, timeout=30.0))
+trace = (
+    Cast(protocol)
+    .play(Writer, agent(model, 'Send a concise note.'))
+    .play(Reader, agent(model, 'Receive the note.'))
+    .run_sync()
+)
+print(trace[0].label.name)
+```
+
+Model wrappers — `Retrying`, `fallback`, `Metered` — live on
+[models](/docs/concepts/models). The coding-agent tutorial
+[binds tools as a workspace role](/docs/tutorials/coding-harness/bind-and-run).
+
+## Custom participants
+
+When the four factories do not fit, implement
+[[agentsparty.participant.Participant]] directly: `select` authors the next
+alt, `offer(envelope)` receives a decoded envelope, `recall` restores a
+journaled envelope during replay, and `cancel` releases state.
+
+Related: [Control and content](/docs/concepts/control-and-content),
+[[agentsparty.runtime.Cast]].
+

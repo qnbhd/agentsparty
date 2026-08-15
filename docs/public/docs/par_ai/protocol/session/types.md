@@ -1,0 +1,34 @@
+# types (/docs/agentsparty/protocol/session/types/index)
+
+Session type carrier: global and hybrid multiparty protocol AST.
+
+<PyAttribute name={"SessionType"} type={"TypeAlias"} value={"SessionEnd | Interaction | SendTo | RecvFrom | SessionRec | SessionVar | Parallel"} />
+
+<PyAttribute name={"GlobalType"} type={"TypeAlias"} value={"SessionEnd | Interaction | SessionRec | SessionVar | Parallel"} />
+
+<PyAttribute name={"SingleSubject"} type={"TypeAlias"} value={"SessionEnd | SessionVar | SessionRec | SendTo | RecvFrom"} />
+
+<PyAttribute name={"SessionFragment"} type={"TypeAlias"} value={"Fragment[SessionType]"} />
+
+<PyAttribute name={"stop"} type={"Fragment[SessionType]"} value={"Fragment.halt(SessionEnd())"} />
+
+<Tabs items={["Class"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"SessionEnd"} href={"/docs/agentsparty/protocol/session/types/SessionEnd"} />
+<Card title={"SessionBranchCase"} href={"/docs/agentsparty/protocol/session/types/SessionBranchCase"} />
+<Card title={"Interaction"} href={"/docs/agentsparty/protocol/session/types/Interaction"} />
+<Card title={"SendTo"} href={"/docs/agentsparty/protocol/session/types/SendTo"} />
+<Card title={"RecvFrom"} href={"/docs/agentsparty/protocol/session/types/RecvFrom"} />
+<Card title={"SessionVar"} href={"/docs/agentsparty/protocol/session/types/SessionVar"} />
+<Card title={"SessionRec"} href={"/docs/agentsparty/protocol/session/types/SessionRec"} />
+<Card title={"Parallel"} href={"/docs/agentsparty/protocol/session/types/Parallel"} />
+
+</Cards>
+
+</Tab>
+
+</Tabs>

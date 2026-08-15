@@ -1,0 +1,73 @@
+"""Human-in-the-loop seam: Approver waits on an HTTP decision."""
+
+from __future__ import annotations
+
+import asyncio
+from typing import TypeVar
+
+import agentsparty as pa
+from agentsparty._utils.assertions import pre  # noqa: PLC2701
+from agentsparty.kernel.nonempty import NonEmptyMap
+from agentsparty.kernel.role import Role
+from agentsparty.participant import Envelope, chosen_branch, says
+from agentsparty.protocol import Chosen, Label, RawValue
+from agentsparty.protocol.language.core import BranchCodec
+
+B = TypeVar('B', bound=BranchCodec)
+
+
+class QueueDesk:
+    """HumanIo whose ``choose`` waits for ``submit`` from the HTTP API."""
+
+    def __init__(self) -> None:
+        self.seen: list[Envelope] = []
+        self._decisions: asyncio.Queue[pa.Choice] = asyncio.Queue()
+        self._waiting = asyncio.Event()
+        self._offered: tuple[str, ...] = ()
+
+    @property
+    def offered(self) -> tuple[str, ...]:
+        return self._offered
+
+    @property
+    def waiting(self) -> bool:
+        return self._waiting.is_set()
+
+    def submit(self, label: str, payload: RawValue = None) -> bool:
+        """Queue *label* if the protocol is currently offering it."""
+        pre(expr=bool(label.strip()), message='a decision label must not be blank')
+        if not self.waiting or label not in self._offered:
+            return False
+        self._decisions.put_nowait(says(label, payload))
+        return True
+
+    async def choose(
+        self,
+        subject: Role,
+        receiver: Role,
+        branches: NonEmptyMap[Label, B],
+    ) -> Chosen[B]:
+        del subject, receiver
+        self._offered = tuple(str(label) for label in branches)
+        self._waiting.set()
+        try:
+            choice = await self._decisions.get()
+            branch = chosen_branch(branches, choice.label)
+            payload = branch.payload.decode(choice.payload)
+            return Chosen(branch=branch, payload=payload, raw=choice.payload)
+        finally:
+            self._waiting.clear()
+            self._offered = ()
+
+    async def notify(self, subject: Role, envelope: Envelope) -> None:
+        del subject
+        self.seen.append(envelope)
+
+    async def recall(self, subject: Role, envelope: Envelope) -> None:
+        del subject
+        self.seen.append(envelope)
+
+    async def cancel(self, subject: Role, notice: object) -> None:
+        del subject, notice
+        self._waiting.clear()
+        self._offered = ()

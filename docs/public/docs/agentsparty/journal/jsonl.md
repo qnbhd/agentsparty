@@ -1,0 +1,29 @@
+# jsonl (/docs/agentsparty/journal/jsonl/index)
+
+JSONL sink: a header line naming the protocol, then one line per decision.
+
+<PyAttribute name={"FORMAT"} type={null} value={"'agentsparty/2'"}>
+
+Value of the ``journal`` field in a header line.
+
+</PyAttribute>
+
+<PyAttribute name={"SESSION_ID_LENGTH"} type={null} value={"12"}>
+
+Number of hexadecimal characters used in a generated session id.
+
+</PyAttribute>
+
+<Tabs items={["Class"]}>
+
+<Tab value={"Class"}>
+
+<Cards >
+
+<Card title={"JsonlJournal"} href={"/docs/agentsparty/journal/jsonl/JsonlJournal"} />
+
+</Cards>
+
+</Tab>
+
+</Tabs>

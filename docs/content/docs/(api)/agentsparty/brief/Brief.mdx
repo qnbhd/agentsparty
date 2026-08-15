@@ -1,0 +1,66 @@
+---
+title: Brief
+---
+
+A participant's memory of a session: a fold over the envelopes it saw.
+
+``remember`` is the state transition and ``messages`` its state-only
+observation. Both must be pure functions of the envelopes folded in. An
+implementation that reads anything else — a clock, a model, the wording a
+model happened to use — makes a resumed session show its model a different
+conversation than the recording session did, and the guarantee that a
+resumed session is faithful no longer holds.
+
+A brief is persistent: ``remember`` returns a new brief and never mutates.
+
+## Functions
+
+<PyFunction name={"remember"} type={"(self, envelope) -> Brief"}>
+
+The brief that has also taken part in *envelope*.
+
+<PySourceCode >
+
+```python
+def remember(self, envelope: Envelope) -> Brief:
+    """The brief that has also taken part in *envelope*.
+
+    Args:
+        envelope: A message this participant sent or received.
+    """
+    ...
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"envelope"} type={"Envelope"} value={undefined}>
+
+A message this participant sent or received.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"agentsparty.brief.Brief"} />
+
+</PyFunction>
+
+<PyFunction name={"messages"} type={"(self) -> tuple[Message, ...]"}>
+
+The conversation to send a model, oldest first.
+
+<PySourceCode >
+
+```python
+def messages(self) -> tuple[Message, ...]:
+    """The conversation to send a model, oldest first."""
+    ...
+```
+
+</PySourceCode>
+
+<PyFunctionReturn type={"tuple[agentsparty.llm.types.Message, ...]"} />
+
+</PyFunction>

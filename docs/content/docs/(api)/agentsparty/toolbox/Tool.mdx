@@ -1,0 +1,37 @@
+---
+title: Tool
+---
+
+One request a toolbox answers, and the effect that answers it.
+
+The protocol declares the argument's schema; `request` is the codec
+the handler was written against, so a tool wired to the wrong branch is
+rejected when the toolbox is built rather than when the session runs.
+
+``answer`` receives the decoded request and nothing else — not the
+conversation, not the role that asked, not the runtime. A decision that
+needs the history belongs in a [`Machine`](/docs/agentsparty/machine/Machine).
+
+## Attributes
+
+<PyAttribute name={"label"} type={"Label"} value={null} />
+
+<PyAttribute name={"request"} type={"Codec[T]"} value={null} />
+
+<PyAttribute name={"answer"} type={"Callable[[T], Awaitable[Choice]]"} value={null} />
+
+## Functions
+
+<PyFunction name={"__init__"} type={"(self, label, request, answer) -> None"}>
+
+<div >
+
+<PyParameter name={"label"} type={"Label"} value={null} />
+<PyParameter name={"request"} type={"Codec[T]"} value={null} />
+<PyParameter name={"answer"} type={"Callable[[T], Awaitable[Choice]]"} value={null} />
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>

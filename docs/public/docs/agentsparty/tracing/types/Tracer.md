@@ -1,0 +1,43 @@
+# Tracer (/docs/agentsparty/tracing/types/Tracer)
+
+Where recorded events go: a stream, a database, a collector.
+
+## Functions
+
+<PyFunction name={"record"} type={"(self, event) -> None"}>
+
+Take *event*.
+
+Implementations must not raise, must not block and must not await:
+``record`` is called synchronously from the task running the session.
+
+<PySourceCode >
+
+```python
+def record(self, event: Event) -> None:
+    """Take *event*.
+
+    Implementations must not raise, must not block and must not await:
+    ``record`` is called synchronously from the task running the session.
+
+    Args:
+        event: The event to record.
+    """
+    ...
+```
+
+</PySourceCode>
+
+<div >
+
+<PyParameter name={"event"} type={"Event"} value={undefined}>
+
+The event to record.
+
+</PyParameter>
+
+</div>
+
+<PyFunctionReturn type={"None"} />
+
+</PyFunction>
