@@ -32,7 +32,7 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: docs/package-lock.json
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
         id: pages
       - run: uv sync --frozen --group docs
       - run: npm --prefix docs ci
